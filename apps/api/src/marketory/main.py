@@ -24,12 +24,15 @@ def create_app(
     settings: Settings | None = None,
     probe: Callable[[], Awaitable[bool]] | None = None,
     authenticator=None,
+    storage=None,
 ) -> FastAPI:
     config = settings if settings is not None else Settings()
-    if authenticator is not None and config.environment != "test":
-        raise ValueError("Authenticator overrides are only allowed in tests")
+    if (authenticator is not None or storage is not None) and config.environment != "test":
+        raise ValueError("Dependency overrides are only allowed in tests")
     app = FastAPI(title="MARKETORY API", version="0.1.0")
-    app.include_router(build_router(config, authenticator or SupabaseAuthenticator(config).verify))
+    app.include_router(
+        build_router(config, authenticator or SupabaseAuthenticator(config).verify, storage)
+    )
 
     @app.middleware("http")
     async def private_responses(request: Request, call_next):
@@ -72,7 +75,7 @@ def create_app(
         CORSMiddleware,
         allow_origins=config.cors_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
     )
 

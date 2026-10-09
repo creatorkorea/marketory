@@ -7,12 +7,15 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from psycopg.rows import dict_row
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from marketory.applications import application_router
+from marketory.attachments import attachment_router
 from marketory.auth import Identity
 from marketory.db import transaction
 from marketory.errors import DomainError
 from marketory.idempotency import Change, execute, lookup
 from marketory.permissions import active_user, one, require_project
 from marketory.projects import project_router
+from marketory.sellers import seller_router
 
 
 class EmptyInput(BaseModel):
@@ -39,7 +42,7 @@ class RequestResult(BaseModel):
     request_id: UUID
 
 
-def build_router(settings, verify):
+def build_router(settings, verify, storage=None):
     router = APIRouter(
         prefix="/api",
         responses={code: {"model": ErrorBody} for code in (401, 403, 404, 409, 410, 422, 503)},
@@ -208,6 +211,16 @@ def build_router(settings, verify):
             "projects.create",
             "projects.status",
             "projects.members",
+            "sellers.save",
+            "applications.create",
+            "applications.update",
+            "applications.submit",
+            "applications.resubmit",
+            "applications.cancel",
+            "attachments.issue",
+            "attachments.complete",
+            "attachments.detach",
+            "attachments.abandon",
         ):
             raise DomainError(422, "UNKNOWN_OPERATION", "지원하지 않는 요청 종류입니다.")
         async with transaction(settings) as conn:
@@ -217,4 +230,7 @@ def build_router(settings, verify):
         )
 
     router.include_router(project_router(settings, identity))
+    router.include_router(seller_router(settings, identity))
+    router.include_router(application_router(settings, identity))
+    router.include_router(attachment_router(settings, identity, storage))
     return router

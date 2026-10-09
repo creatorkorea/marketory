@@ -29,7 +29,8 @@ def isolated_db():
                 IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname='authenticated') THEN
                     CREATE ROLE authenticated NOLOGIN; END IF;
                 END $$""")
-            conn.execute((ROOT / "supabase/migrations/202610090001_foundation.sql").read_text())
+            for migration in sorted((ROOT / "supabase/migrations").glob("*.sql")):
+                conn.execute(migration.read_text(encoding="utf-8"))
         yield target
     finally:
         with psycopg.connect(dsn, autocommit=True) as admin:

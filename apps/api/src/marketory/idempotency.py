@@ -95,10 +95,10 @@ async def execute(
 
 
 async def lookup(conn, actor, operation, key):
+    await lock_key(conn, actor, operation, key)
     user = await one(conn, "SELECT user_id FROM public.users WHERE user_id=%s FOR SHARE", (actor,))
     if user or operation != "auth.bootstrap":
         await active_user(conn, actor)
-    await lock_key(conn, actor, operation, key)
     row = await get_row(conn, actor, operation, key)
     if not row:
         return Result(
@@ -137,6 +137,8 @@ async def expire(conn, actor, operation, key, cutoff):
         None,
         "user",
         "project",
+        "seller",
+        "application",
     ):
         raise DomainError(409, "RESOURCE_NOT_TERMINAL", "연결된 작업 결과 확인이 필요합니다.")
     result = await conn.execute(

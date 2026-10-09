@@ -490,6 +490,7 @@ def project_router(settings, identity):
                     "recruit_end_at",
                     "target_team_count",
                     "status",
+                    "policy_version",
                     "policy_json",
                     "booth_policy_json",
                 )

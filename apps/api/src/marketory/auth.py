@@ -12,6 +12,7 @@ from marketory.errors import DomainError
 class Identity:
     user_id: UUID
     email: str
+    email_verified_at: datetime | None = None
 
 
 class SupabaseAuthenticator:
@@ -59,7 +60,10 @@ class SupabaseAuthenticator:
             email = user["email"]
             if not isinstance(email, str) or not email or len(email) > 255:
                 raise ValueError("Invalid email")
-            return Identity(UUID(user["id"]), email)
+            verified_at = datetime.fromisoformat(user["email_confirmed_at"].replace("Z", "+00:00"))
+            if verified_at.tzinfo is None:
+                raise ValueError("Verification time requires timezone")
+            return Identity(UUID(user["id"]), email, verified_at)
         except (ValueError, KeyError, TypeError, AttributeError):
             raise DomainError(
                 401, "INVALID_SESSION", "확인된 이메일 계정으로 다시 로그인해 주세요."

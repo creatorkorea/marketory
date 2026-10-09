@@ -11,7 +11,7 @@ type Pending = {
   body?: Record<string, unknown>;
 };
 export function useMarketMutation(
-  session: MarketSession,
+  session: Pick<MarketSession, "actor" | "client">,
   scope: string,
   onSuccess: (data: Record<string, unknown>) => void,
 ) {
@@ -20,6 +20,7 @@ export function useMarketMutation(
     [pending, setPending] = useState<Pending | null>(null),
     [storageError, setStorageError] = useState(false);
   const busy = useRef(false),
+    pendingRef = useRef<Pending | null>(null),
     controller = useRef<AbortController | null>(null),
     success = useRef(onSuccess);
   success.current = onSuccess;
@@ -30,10 +31,11 @@ export function useMarketMutation(
         const p = JSON.parse(text) as Pending;
         if (
           !/^[0-9a-f-]{36}$/i.test(p.key) ||
-          !/^projects\.(create|update|status|members)$/.test(p.operation)
+          !/^(projects\.(create|update|status|members)|sellers\.save|applications\.(create|update|submit|resubmit|cancel)|attachments\.(issue|complete|detach|abandon))$/.test(p.operation)
         )
           throw new Error();
         setPending(p);
+        pendingRef.current = p;
         setResult({ state: "unresolved" });
       }
     } catch {
@@ -75,11 +77,14 @@ export function useMarketMutation(
       if (r.state === "succeeded") {
         sessionStorage.removeItem(name);
         setPending(null);
+        pendingRef.current = null;
         success.current(r.body!.data as Record<string, unknown>);
       } else if (["failed", "conflict"].includes(r.state)) {
         sessionStorage.removeItem(name);
         setPending(null);
+        pendingRef.current = null;
       }
+      return r;
     } catch {
       if (!signal.aborted) setResult({ state: "unresolved" });
     } finally {
@@ -92,7 +97,7 @@ export function useMarketMutation(
     method: "POST" | "PATCH",
     body: Record<string, unknown>,
   ) => {
-    if (busy.current || pending || storageError) return;
+    if (busy.current || pendingRef.current || storageError) return;
     const p = {
       key: crypto.randomUUID(),
       operation,
@@ -108,7 +113,8 @@ export function useMarketMutation(
       return;
     }
     setPending(p);
-    void run(p, false);
+    pendingRef.current = p;
+    return run(p, false);
   };
   return {
     result,

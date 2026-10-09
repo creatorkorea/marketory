@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     worker_poll_seconds: float = Field(default=10, ge=1, le=300)
     supabase_url: str | None = None
     supabase_publishable_key: SecretStr | None = None
+    supabase_secret_key: SecretStr | None = None
+    storage_bucket: str = "seller-assets"
+    public_api_url: str = "http://127.0.0.1:8000"
+    upload_intent_ttl_seconds: int = Field(default=900, ge=60, le=3600)
 
     @model_validator(mode="after")
     def validate_environment(self):
@@ -26,6 +30,8 @@ class Settings(BaseSettings):
         if self.database_url and not self.database_url.get_secret_value().strip():
             self.database_url = None
         if self.environment in {"preview", "production"}:
+            if self.supabase_secret_key and not self.public_api_url.startswith("https://"):
+                raise ValueError("Storage uploads require a public HTTPS API origin")
             if not self.database_url:
                 raise ValueError("Database configuration required outside local/test")
             if "cors_origins" not in self.model_fields_set:

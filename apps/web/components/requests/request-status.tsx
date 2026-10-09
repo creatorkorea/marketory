@@ -15,14 +15,14 @@ const copy = {
   conflict: ["요청 내용 확인이 필요해요.", "기존 요청과 내용이 달라 처리를 멈췄습니다. 현재 상태를 확인해 주세요."],
   failed: ["계정 확인을 완료하지 못했어요.", "입력 또는 서비스 상태를 확인해 주세요. 요청을 자동으로 반복하지 않습니다."],
 } as const;
-export function RequestStatus({ result, onRetry, onCurrent, business = false }: { result: Recovery; onRetry: () => void; onCurrent: () => void; business?: boolean }) {
+export function RequestStatus({ result, onRetry, onCurrent, business = false, subject = "마켓" }: { result: Recovery; onRetry: () => void; onCurrent: () => void; business?: boolean; subject?: "마켓" | "신청" | "셀러 프로필" | "파일" }) {
   const businessCopy: Partial<Record<Recovery["state"], readonly [string,string]>> = {
     checking:["저장 결과를 확인하고 있어요.","같은 요청을 확인하고 있습니다. 화면을 닫아도 서버 작업은 취소되지 않습니다."],
     succeeded:["저장했어요.","최신 내용을 불러오고 있습니다."],
     conflict:["다른 변경이 있어 저장을 멈췄어요.","입력은 유지됩니다. 최신 내용을 확인한 뒤 변경 사항을 다시 검토해 주세요."],
-    forbidden:["이 마켓의 변경 권한이 없어요.","권한이 변경되었을 수 있습니다. 관리자에게 확인해 주세요."],
-    failed:["저장하지 못했어요.",typeof result.body?.message === "string" ? result.body.message : "필수 항목·기간·심사 비중을 확인해 주세요."],
-    expired:["요청 결과 보관기간이 지났어요.","자동으로 다시 실행하지 않습니다. 현재 마켓과 감사 기록을 확인해 주세요."],
+    forbidden:[`${subject} 변경 권한이 없어요.`,"권한이 변경되었을 수 있습니다. 관리자에게 확인해 주세요."],
+    failed:["저장하지 못했어요.",typeof result.body?.message === "string" ? result.body.message : "입력과 현재 이용 조건을 확인해 주세요."],
+    expired:["요청 결과 보관기간이 지났어요.",`자동으로 다시 실행하지 않습니다. 현재 ${subject} 상태를 확인해 주세요.`],
   };
   const [title, description] = (business && businessCopy[result.state]) || copy[result.state];
   const pending = result.state === "checking" || result.state === "succeeded";
@@ -33,7 +33,7 @@ export function RequestStatus({ result, onRetry, onCurrent, business = false }: 
     </Notice>
     <div className="actions">
       {result.state === "unresolved" && <Button onClick={onRetry}>기존 요청 다시 확인</Button>}
-      {["expired", "conflict", "failed"].includes(result.state) && <Button onClick={onCurrent}>{business ? "최신 마켓 확인" : "현재 계정 확인"}</Button>}
+      {["expired", "conflict", "failed"].includes(result.state) && <Button onClick={onCurrent}>{business ? `최신 ${subject} 확인` : "현재 계정 확인"}</Button>}
       {result.state === "reauth" && <ButtonLink href="/login" {...(business ? {target:"_blank",rel:"noopener"}: {})}>다시 로그인{business ? " (새 탭)" : ""}</ButtonLink>}
       {business && result.state === "reauth" && <Button onClick={onRetry}>로그인 후 결과 확인</Button>}
     </div>

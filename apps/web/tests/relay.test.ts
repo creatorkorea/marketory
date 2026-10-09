@@ -4,6 +4,15 @@ import { relay } from "../lib/api/relay";
 const base = "https://api.example.test";
 const req = (path: string, init: RequestInit = {}) => new Request(`https://app.example.test/api/backend/${path}`, { ...init, headers: { Authorization: "Bearer test-token", ...init.headers } });
 describe("backend relay trust boundary", () => {
+  it("allows public policy without credentials, drops bearer, and restricts seller pagination", async () => {
+    const fetcher = vi.fn().mockResolvedValue(Response.json({ data: {} }));
+    expect((await relay(req("attachments/policy"), ["attachments", "policy"], base, fetcher)).status).toBe(200);
+    expect(fetcher.mock.calls[0][1].headers.get("authorization")).toBeNull();
+    const pid = "12345678-1234-4123-8123-123456789abc";
+    const r = await relay(req(`me/applications?limit=10&offset=0&project_id=${pid}&seller_id=other`), ["me", "applications"], base, async url => Response.json({ url: String(url) }));
+    expect((await r.json()).url).toBe(`https://api.example.test/api/me/applications?limit=10&offset=0&project_id=${pid}`);
+    expect((await relay(req(`attachments/uploads/${pid}`, { method: "PUT" }), ["attachments", "uploads", pid], base, fetcher)).status).toBe(404);
+  });
   it("relays project updates with the original key and preserves pagination", async () => {
     const pid = "12345678-1234-4123-8123-123456789abc";
     const response = await relay(req(`projects/${pid}`, { method: "PATCH", headers: { "Idempotency-Key": pid }, body: JSON.stringify({ name: "마켓", expected_version: 1 }) }), ["projects", pid], base, async (_url, init) => Response.json({ data: JSON.parse(init?.body as string), key: (init?.headers as Headers).get("Idempotency-Key") }));

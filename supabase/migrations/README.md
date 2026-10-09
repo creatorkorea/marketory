@@ -1,5 +1,7 @@
 # DB migration
 
+2026-10-09 후속: `20261009073604_seller_applications_attachments.sql`은 셀러 버전, 신청/이력/첨부/업로드 intent와 RLS·직접 접근 차단을 추가한다. 실제 프로젝트에 CLI dry-run 후 적용하고 이력 및 신규 테이블 4개의 권한을 조회했다. [셀러 신청 기록](../../docs/SELLER-APPLICATIONS.md)을 참고한다.
+
 업무 SQL migration은 이 폴더에서 버전 관리한다. `202610090001_foundation.sql`은 users·projects·project_members·sellers·audit_logs·api_idempotency 기반과 직접 접근 차단·RLS·요청 커밋 제약을 만든다. auth.users와 anon/authenticated는 Supabase가 제공해야 한다. 운영 환경에서 대용 auth 테이블을 만들지 않는다.
 
 P1부터 Supabase CLI migration을 순차 추가한다. 적용은 API/worker 시작 시 자동 실행하지 않고 배포 전 별도 단계에서 한 번 수행한다. 연결은 migration용 direct 또는 session 연결을 사용한다. 런타임은 psycopg 명시적 transaction을 사용하며 transaction pooler를 사용할 때도 prepared statement를 비활성화한다.

@@ -115,11 +115,12 @@ UNRESOLVED 자동 재시도는 v1.3의 2/4/8초 한정이며 이후 명시 결�
 
 | Capability | Canonical owner | Source of truth | Allowed variants | Verification |
 |---|---|---|---|---|
-| Form | apps/web/components/ui/field.tsx + TextareaField/Input/Button | 이 문서 입력·접근성 계약 | email, OTP, 마켓 설정 | 인증·마켓 브라우저 테스트 |
+| Form | apps/web/components/ui/field.tsx + TextareaField/Input/Button | 이 문서 입력·접근성 계약 | email, OTP, 마켓 설정, 셀러 프로필·신청 | 인증·마켓·셀러 브라우저 테스트 |
 | Scrollbar | apps/web/app/globals.css | DESIGN.md 토큰 | 전역 기본 | 정적 검사·브라우저 |
 | Navigation | ButtonLink + next/link | 실제 목적지 | primary, secondary | 브라우저 이동 |
 | Auth | lib/auth/client.ts + components/auth | Supabase provider·Python 권한 검증 | email OTP, local logout | 인증 브라우저 테스트 |
-| Recovery | lib/requests/recovery.ts + RequestStatus | v1.3/이 문서 7절 | auth.bootstrap, projects.* | 단위·브라우저 테스트 |
+| Recovery | lib/requests/recovery.ts + RequestStatus + useMarketMutation | v1.3/이 문서 7절 | auth.bootstrap, projects.*, sellers.save, applications.*, attachments.* | 단위·브라우저 테스트 |
+| Upload | components/seller/uploads.tsx | 서버 policy·pending_uploads·version/revision | 사진, 사업자 증빙 | 순차 전송·충돌·미완료 복원 브라우저 테스트 |
 | Dialog | components/ui/confirm-dialog.tsx | native dialog의 modal focus/inert, 취소 최초 초점 | 상태·권한 변경, 이탈 확인 | 마켓 브라우저 테스트 |
 | Toast | components/ui/toast.tsx | 4초, hover/focus 일시정지, polite | 일반 저장 성공 | 마켓 브라우저 테스트 |
 | DateTime | lib/markets/form.ts + Field | KST 고정, YYYY-MM-DD HH:mm 직접 입력 | 모집 시작·마감, 행사 종료 | 날짜 왕복 단위 테스트 |

@@ -5,22 +5,36 @@ function error(status: number, code: string) { return Response.json({ code, requ
 export async function relay(request: Request, segments: string[], base: string | undefined, fetcher: typeof fetch = fetch, appOrigin?: string): Promise<Response> {
   const path = segments.join("/");
   const project = segments[0] === "projects" && uuid.test(segments[1] ?? "");
+  const application = segments[0] === "applications" && uuid.test(segments[1] ?? "");
+  const attachment = segments[0] === "attachments" && uuid.test(segments[1] ?? "");
+  const publicRead = request.method === "GET" && (path === "attachments/policy" ||
+    (segments.length === 3 && segments[0] === "public" && segments[1] === "projects" && uuid.test(segments[2])));
   const allowed = (request.method === "POST" && path === "auth/bootstrap") ||
+    publicRead ||
+    (path === "me/seller" && ["GET", "POST", "PATCH"].includes(request.method)) ||
+    (path === "me/applications" && request.method === "GET") ||
+    (path === "applications" && request.method === "POST") ||
+    (application && segments.length === 2 && ["GET", "PATCH"].includes(request.method)) ||
+    (application && segments.length === 3 && request.method === "POST" && ["submit", "resubmit", "cancel", "validate"].includes(segments[2])) ||
+    (["attachments/upload-url", "attachments/complete"].includes(path) && request.method === "POST") ||
+    (attachment && segments.length === 3 && ((segments[2] === "detach" && request.method === "POST") || (segments[2] === "download" && request.method === "GET"))) ||
+    (segments.length === 4 && segments[0] === "attachments" && segments[1] === "uploads" && uuid.test(segments[2]) && segments[3] === "abandon" && request.method === "POST") ||
     (path === "projects" && ["GET", "POST"].includes(request.method)) ||
     (project && segments.length === 2 && ["GET", "PATCH"].includes(request.method)) ||
     (project && segments.length === 3 && request.method === "GET" && ["settings", "members"].includes(segments[2])) ||
     (project && segments.length === 3 && request.method === "POST" && ["status", "members"].includes(segments[2])) ||
     (request.method === "GET" && (path === "me" || (segments.length === 4 && segments[0] === "me" && segments[1] === "requests" &&
-      ["auth.bootstrap", "projects.update", "projects.create", "projects.status", "projects.members"].includes(segments[2]) && uuid.test(segments[3]))));
+      ["auth.bootstrap", "projects.update", "projects.create", "projects.status", "projects.members", "sellers.save", "applications.create", "applications.update", "applications.submit", "applications.resubmit", "applications.cancel", "attachments.issue", "attachments.complete", "attachments.detach", "attachments.abandon"].includes(segments[2]) && uuid.test(segments[3]))));
   if (!allowed) return error(404, "NOT_FOUND");
   const authorization = request.headers.get("authorization");
-  if (!authorization || authorization.length > 8192 || !/^Bearer \S+$/.test(authorization)) return error(401, "UNAUTHENTICATED");
+  if (!publicRead && (!authorization || authorization.length > 8192 || !/^Bearer \S+$/.test(authorization))) return error(401, "UNAUTHENTICATED");
   const origin = request.headers.get("origin");
   // Next may reconstruct request.url with an internal hostname. Trust only the
   // configured public origin, never client-supplied Host/Forwarded headers.
   if (request.method !== "GET" && origin && origin !== (appOrigin ?? new URL(request.url).origin)) return error(403, "FORBIDDEN");
   if (!base) return error(503, "API_UNAVAILABLE");
-  const headers = new Headers({ Authorization: authorization, Accept: "application/json" });
+  const headers = new Headers({ Accept: "application/json" });
+  if (!publicRead && authorization) headers.set("Authorization", authorization);
   let body: string | undefined;
   if (["POST", "PATCH"].includes(request.method)) {
     const key = request.headers.get("idempotency-key");
@@ -35,9 +49,10 @@ export async function relay(request: Request, segments: string[], base: string |
   }
   try {
     const target = new URL(`/api/${path}`, base);
-    if (path === "projects" && request.method === "GET") {
+    if (["projects", "me/applications"].includes(path) && request.method === "GET") {
       const query = new URL(request.url).searchParams;
       for (const key of ["limit", "offset"]) if (query.has(key)) target.searchParams.set(key, query.get(key)!);
+      if (path === "me/applications" && query.has("project_id")) target.searchParams.set("project_id", query.get("project_id")!);
     }
     const upstream = await fetcher(target, {
       method: request.method, headers, body, cache: "no-store", redirect: "error",

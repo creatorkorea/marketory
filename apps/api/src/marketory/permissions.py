@@ -61,6 +61,37 @@ async def require_seller(conn, actor, seller_id):
 
 async def authorize_result(conn, actor, row):
     await active_user(conn, actor)
+    if row["operation"] == "sellers.save" and row["resource_type"] == "seller":
+        user = await active_user(conn, actor)
+        if user["account_role"] != "SELLER":
+            raise DomainError(403, "FORBIDDEN", "셀러 권한이 필요합니다.")
+        if row["status"] != "FAILED":
+            await require_seller(conn, actor, row["resource_id"])
+        return
+    if (
+        row["operation"]
+        in (
+            "applications.create",
+            "applications.update",
+            "applications.submit",
+            "applications.resubmit",
+            "applications.cancel",
+            "attachments.issue",
+            "attachments.complete",
+            "attachments.detach",
+            "attachments.abandon",
+        )
+        and row["resource_type"] == "application"
+    ):
+        if row["operation"] == "applications.create" and row["status"] == "FAILED":
+            user = await active_user(conn, actor)
+            if user["account_role"] != "SELLER":
+                raise DomainError(403, "FORBIDDEN", "셀러 권한이 필요합니다.")
+        else:
+            from marketory.application_domain import require_application
+
+            await require_application(conn, actor, row["resource_id"])
+        return
     if (
         row["operation"] == "auth.bootstrap"
         and row["resource_type"] == "user"
