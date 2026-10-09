@@ -4,6 +4,25 @@ import { relay } from "../lib/api/relay";
 const base = "https://api.example.test";
 const req = (path: string, init: RequestInit = {}) => new Request(`https://app.example.test/api/backend/${path}`, { ...init, headers: { Authorization: "Bearer test-token", ...init.headers } });
 describe("backend relay trust boundary", () => {
+  it("relays project updates with the original key and preserves pagination", async () => {
+    const pid = "12345678-1234-4123-8123-123456789abc";
+    const response = await relay(req(`projects/${pid}`, { method: "PATCH", headers: { "Idempotency-Key": pid }, body: JSON.stringify({ name: "마켓", expected_version: 1 }) }), ["projects", pid], base, async (_url, init) => Response.json({ data: JSON.parse(init?.body as string), key: (init?.headers as Headers).get("Idempotency-Key") }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ data: { name: "마켓", expected_version: 1 }, key: pid });
+    const list = await relay(req("projects?limit=20&offset=20&secret=drop"), ["projects"], base, async (url) => Response.json({ url: String(url) }));
+    expect(await list.json()).toEqual({ url: "https://api.example.test/api/projects?limit=20&offset=20" });
+  });
+  it("accepts the configured public origin when the server uses an internal hostname", async () => {
+    const request = new Request("http://localhost:3000/api/backend/auth/bootstrap", { method: "POST", body: "{}", headers: { Authorization: "Bearer test-token", Origin: "http://127.0.0.1:3000", "Idempotency-Key": "12345678-1234-4123-8123-123456789abc" } });
+    const result = await relay(request, ["auth", "bootstrap"], base, async () => Response.json({ data: { profile_required: true } }), "http://127.0.0.1:3000");
+    expect(result.status).toBe(200);
+    expect(await result.json()).toEqual({ data: { profile_required: true } });
+  });
+  it.each(["https://evil.test", "http://localhost:3000", "null"])("rejects %s even with spoofed forwarded headers", async (origin) => {
+    const request = new Request("http://localhost:3000/api/backend/auth/bootstrap", { method: "POST", body: "{}", headers: { Authorization: "Bearer test-token", Origin: origin, Host: "evil.test", "X-Forwarded-Host": "evil.test", "Idempotency-Key": "12345678-1234-4123-8123-123456789abc" } });
+    const result = await relay(request, ["auth", "bootstrap"], base, async () => Response.json({ data: {} }), "http://127.0.0.1:3000");
+    expect(result.status).toBe(403);
+  });
   it.each(["admin/users", "../me", "https://evil.test", "me/requests/unknown/a"])("blocks non-allowlisted path %s", async (path) => {
     const fetcher = vi.fn();
     expect((await relay(req("me"), path.split("/"), base, fetcher)).status).toBe(404);

@@ -115,13 +115,18 @@ UNRESOLVED 자동 재시도는 v1.3의 2/4/8초 한정이며 이후 명시 결�
 
 | Capability | Canonical owner | Source of truth | Allowed variants | Verification |
 |---|---|---|---|---|
-| Form | apps/web/components/ui/field.tsx + Input/Button | 이 문서 입력·접근성 계약 | email, OTP | 인증 브라우저 테스트 |
+| Form | apps/web/components/ui/field.tsx + TextareaField/Input/Button | 이 문서 입력·접근성 계약 | email, OTP, 마켓 설정 | 인증·마켓 브라우저 테스트 |
 | Scrollbar | apps/web/app/globals.css | DESIGN.md 토큰 | 전역 기본 | 정적 검사·브라우저 |
 | Navigation | ButtonLink + next/link | 실제 목적지 | primary, secondary | 브라우저 이동 |
 | Auth | lib/auth/client.ts + components/auth | Supabase provider·Python 권한 검증 | email OTP, local logout | 인증 브라우저 테스트 |
-| Recovery | lib/requests/recovery.ts + RequestStatus | v1.3/이 문서 7절 | auth.bootstrap | 단위·브라우저 테스트 |
+| Recovery | lib/requests/recovery.ts + RequestStatus | v1.3/이 문서 7절 | auth.bootstrap, projects.* | 단위·브라우저 테스트 |
+| Dialog | components/ui/confirm-dialog.tsx | native dialog의 modal focus/inert, 취소 최초 초점 | 상태·권한 변경, 이탈 확인 | 마켓 브라우저 테스트 |
+| Toast | components/ui/toast.tsx | 4초, hover/focus 일시정지, polite | 일반 저장 성공 | 마켓 브라우저 테스트 |
+| DateTime | lib/markets/form.ts + Field | KST 고정, YYYY-MM-DD HH:mm 직접 입력 | 모집 시작·마감, 행사 종료 | 날짜 왕복 단위 테스트 |
 
-인증 결과/요청 오류는 Notice로 화면 안에 지속한다. 이번 흐름에는 성공 토스트나 업무 CRUD를 추가하지 않는다. SDK의 브라우저 세션 저장·자동 갱신을 사용하고 민감 정보는 URL이나 별도 복구 저장소에 복제하지 않는다. actor별 bootstrap 키만 sessionStorage에 남겨 새로고침/재인증으로 중복 초기화하지 않는다. 계정 전환/로그아웃 시 이전 화면 데이터를 지운다. 현재 구현된 인증 복귀 목적지는 `/account`이며 외부 redirect는 받지 않는다.
+마켓 설정은 브라우저 달력 팝업을 사용하지 않고 KST 형식 입력과 검증을 제공한다. 역할은 작은 고정 집합의 native radio를 사용한다. 새 마켓은 DRAFT로만 생성한다. 멤버 추가·변경과 공개·마감은 대상/영향/사유를 확인한 뒤 실행한다. 입력이나 결과 미확정 상태에서 in-app 링크 이동은 공유 다이얼로그, 실제 unload는 beforeunload로 보호한다. 요청 본문은 메모리에만 유지하고 sessionStorage에는 actor별 키·operation·경로만 보관한다. 새로고침 후 본문이 없으면 결과 조회만 하며, 미확정·만료 요청은 새 키 자동 발급 없이 현재 데이터 확인을 안내한다.
+
+인증 결과/요청 오류는 Notice로 화면 안에 지속한다. 인증 자체에는 성공 토스트를 쓰지 않으며, 마켓 저장 성공에 공통 Toast를 사용한다. SDK의 브라우저 세션 저장·자동 갱신을 사용하고 민감 정보는 URL이나 별도 복구 저장소에 복제하지 않는다. actor별 bootstrap 키를 sessionStorage에 남겨 새로고침/재인증으로 중복 초기화하지 않는다. 계정 전환/로그아웃 시 이전 화면 데이터를 지운다. 인증 복귀 목적지는 `/account`이며 외부 redirect는 받지 않는다. 업무 재인증 링크는 새 탭을 열어 원래 입력/요청 본문을 유지한다.
 
 - 360/390/768/1440px, 200% 확대에서 핵심 흐름 완료, 모바일 폼 가로 스크롤 없음.
 - 키보드만으로 폼·모달·메뉴·사진 제거·부스 배치 대안 완료.

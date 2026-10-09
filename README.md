@@ -2,7 +2,7 @@
 
 플리마켓 셀러 모집·신청·심사·참가확정·부스·안내를 관리하는 반응형 웹 서비스입니다.
 
-**현재 상태: P0 + P1/P3 백엔드 기반 및 OTP 로그인·계정·요청 복구 UI 구현.** 실제 Supabase/OTP 수신·신청 업무·외부 배포는 연결 전입니다. Git 원격 저장소는 `creatorkorea/marketory`입니다. [로컬 실행 안내](docs/LOCAL-DEVELOPMENT.md) · [P1/P3 구현](docs/P1-P3-IMPLEMENTATION.md) · [인증 UI·연결·검증](docs/AUTH-SETUP.md). `design-system/preview.html`은 기존 정적 견본이고 제품 코드의 `/ui`는 기본 컴포넌트 견본입니다.
+**현재 상태: 인증·요청 복구 기반과 마켓 설정·권한 관리 UI/API 구현.** 실제 Supabase DB 연결·migration·Resend OTP 로그인과 지정 관리자 권한을 확인했습니다. `/markets`에서 마켓 초안·모집 조건·운영 상태·담당자 권한을 관리합니다. 신청 업무·공개 모집 웹페이지·외부 배포는 미완료입니다. Git 원격은 `creatorkorea/marketory`입니다. [로컬 실행](docs/LOCAL-DEVELOPMENT.md) · [P1/P3 기반](docs/P1-P3-IMPLEMENTATION.md) · [인증 검증](docs/AUTH-SETUP.md) · [마켓 관리 범위와 검증](docs/MARKET-MANAGEMENT.md). `design-system/preview.html`은 정적 디자인 견본이고 `/ui`는 제품 컴포넌트 견본입니다.
 
 ## 개발을 시작하려면
 

@@ -11,7 +11,8 @@ from marketory.auth import Identity
 from marketory.db import transaction
 from marketory.errors import DomainError
 from marketory.idempotency import Change, execute, lookup
-from marketory.permissions import active_user, require_project
+from marketory.permissions import active_user, one, require_project
+from marketory.projects import project_router
 
 
 class EmptyInput(BaseModel):
@@ -129,6 +130,17 @@ def build_router(settings, verify):
     async def me(actor: Annotated[Identity, Depends(identity)]):
         async with transaction(settings) as conn:
             user = await active_user(conn, actor.user_id)
+            can_create = user["global_role"] == "PLATFORM_ADMIN"
+            if not can_create and user["account_role"] == "STAFF":
+                can_create = bool(
+                    await one(
+                        conn,
+                        "SELECT m.project_member_id FROM public.project_members m "
+                        "JOIN public.projects p USING(project_id) WHERE m.user_id=%s "
+                        "AND m.active AND m.role='OPERATOR' AND p.deleted_at IS NULL LIMIT 1",
+                        (actor.user_id,),
+                    )
+                )
         return {
             "data": {
                 "user_id": str(actor.user_id),
@@ -137,6 +149,7 @@ def build_router(settings, verify):
                 "global_role": user["global_role"],
                 "account_role": user["account_role"],
                 "profile_required": user["profile_completed_at"] is None,
+                "can_create_project": can_create,
             },
             "request_id": uuid4(),
         }
@@ -154,12 +167,17 @@ def build_router(settings, verify):
                 raise DomainError(403, "FORBIDDEN", "프로젝트 운영 권한이 없습니다.")
             async with conn.cursor(row_factory=dict_row) as cursor:
                 await cursor.execute(
-                    """SELECT p.project_id,p.name,p.status,p.version FROM public.projects p
+                    """SELECT p.project_id,p.name,p.status,p.version,p.event_date,p.venue,
+                    p.target_team_count,p.recruit_end_at,
+                    (%s OR EXISTS(SELECT FROM public.project_members m
+                    WHERE m.project_id=p.project_id
+                    AND m.user_id=%s AND m.active AND m.role='OPERATOR')) AS can_manage
+                    FROM public.projects p
                     WHERE p.deleted_at IS NULL AND (%s OR EXISTS (
                     SELECT FROM public.project_members m
                     WHERE m.project_id=p.project_id AND m.user_id=%s AND m.active))
                     ORDER BY p.created_at DESC,p.project_id LIMIT %s OFFSET %s""",
-                    (admin, actor.user_id, limit, offset),
+                    (admin, actor.user_id, admin, actor.user_id, limit, offset),
                 )
                 data = await cursor.fetchall()
         return {"data": data, "request_id": uuid4()}
@@ -184,7 +202,13 @@ def build_router(settings, verify):
     async def request_result(
         operation: str, idempotency_key: UUID, actor: Annotated[Identity, Depends(identity)]
     ):
-        if operation not in ("auth.bootstrap", "projects.update"):
+        if operation not in (
+            "auth.bootstrap",
+            "projects.update",
+            "projects.create",
+            "projects.status",
+            "projects.members",
+        ):
             raise DomainError(422, "UNKNOWN_OPERATION", "지원하지 않는 요청 종류입니다.")
         async with transaction(settings) as conn:
             result = await lookup(conn, actor.user_id, operation, idempotency_key)
@@ -192,4 +216,5 @@ def build_router(settings, verify):
             result.body, status_code=result.status, headers={"Cache-Control": "no-store"}
         )
 
+    router.include_router(project_router(settings, identity))
     return router

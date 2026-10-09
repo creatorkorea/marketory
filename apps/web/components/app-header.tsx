@@ -10,7 +10,7 @@ export function AppHeader() {
         <Image src="/brand/marketory-stall.png" width={56} height={56} alt="" priority />
         <span>마켓토리</span>
       </Link>
-      <nav aria-label="주 메뉴"><Link href="/account">내 계정</Link><Link href="/ui">UI 미리보기</Link></nav>
+      <nav aria-label="주 메뉴"><Link href="/markets">마켓 관리</Link><Link href="/account">내 계정</Link></nav>
     </header>
   </>;
 }

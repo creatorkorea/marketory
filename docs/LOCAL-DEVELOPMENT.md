@@ -77,7 +77,7 @@ API 모델을 바꾸면 `npm.cmd run types:generate`를 실행한다. FastAPI �
 
 ## 배포 준비
 
-- Vercel: 저장소 연결 후 Root Directory apps/web, 상위 workspace 파일 접근 허용. npm lockfile 설치 및 Next.js 빌드. API_BASE_URL은 배포된 Render API HTTPS 주소로 설정.
+- Vercel: 저장소 연결 후 Root Directory apps/web, 상위 workspace 파일 접근 허용. npm lockfile 설치 및 Next.js 빌드. API_BASE_URL은 배포된 Render API HTTPS 주소로 설정. APP_ORIGIN은 해당 웹 배포의 정확한 HTTPS origin으로 설정하며 경로·마지막 슬래시는 제외한다. Preview도 각 접속 주소를 설정한다.
 - Render: Docker context apps/api, Dockerfile apps/api/Dockerfile. API는 기본 CMD, worker는 `python -m marketory.worker`. 같은 소스·이미지 구성으로 두 서비스에 적용.
 - API health 경로는 /health/ready. worker는 로그·프로세스 감시를 별도로 구성한다.
 - Render에는 MARKETORY_ENVIRONMENT, MARKETORY_DATABASE_URL, MARKETORY_CORS_ORIGINS, MARKETORY_WORKER_POLL_SECONDS를 환경별로 설정한다. preview/production은 DB와 명시적인 HTTPS origin이 없으면 시작을 거절한다.

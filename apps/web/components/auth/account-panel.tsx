@@ -11,7 +11,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { RequestStatus } from "@/components/requests/request-status";
 
-type Profile = { user_id: string; email: string; account_role: string; profile_required: boolean };
+type Profile = { user_id: string; email: string; account_role: string; global_role: string; profile_required: boolean };
 export function AccountPanel() {
   const [client, setClient] = useState<SupabaseClient | null>(null);
   const [actor, setActor] = useState<string | null>(null);
@@ -109,9 +109,9 @@ export function AccountPanel() {
     {profile ? <>
       <span className="badge">계정 확인 완료</span>
       <h2>반가워요.</h2><p className="account-email">{profile.email}</p>
-      <dl className="account-facts"><div><dt>계정 유형</dt><dd>{profile.account_role === "STAFF" ? "운영 스태프" : "셀러"}</dd></div>
+      <dl className="account-facts"><div><dt>계정 유형</dt><dd>{profile.global_role === "PLATFORM_ADMIN" ? "플랫폼 관리자" : profile.account_role === "STAFF" ? "운영 스태프" : "셀러"}</dd></div>
         <div><dt>프로필</dt><dd>{profile.profile_required ? "작성 필요" : "작성 완료"}</dd></div></dl>
-      <Notice title="다음 만남을 준비하고 있어요.">프로필 작성과 마켓 신청은 준비 후 안내할게요. 현재는 계정 확인까지 이용할 수 있습니다.</Notice>
+      {profile.global_role === "PLATFORM_ADMIN" || profile.account_role === "STAFF" ? <div className="actions"><ButtonLink href="/markets">마켓 관리하기</ButtonLink></div> : <Notice title="다음 만남을 준비하고 있어요.">프로필 작성과 마켓 신청은 준비 후 안내할게요. 현재는 계정 확인까지 이용할 수 있습니다.</Notice>}
     </> : storageError ? <Notice title="요청 복구 정보를 보관할 수 없어요." tone="warning">브라우저의 사이트 저장 허용 여부를 확인한 뒤 새로고침해 주세요. 중복 처리를 막기 위해 요청을 시작하지 않았습니다.</Notice> : <RequestStatus result={result} onRetry={() => void load("manual")} onCurrent={() => void load("current")} />}
     {logoutError && <Notice title="로그아웃을 완료하지 못했어요." tone="danger">네트워크를 확인한 뒤 다시 로그아웃해 주세요. 공유 기기에서는 로그아웃 완료를 확인해 주세요.</Notice>}
     <div className="account-footer"><Button variant="secondary" onClick={signOut} disabled={signingOut} aria-busy={signingOut}>이 기기에서 로그아웃</Button><Link className="text-button" href="/">홈으로</Link></div>

@@ -67,7 +67,21 @@ async def authorize_result(conn, actor, row):
         and row["resource_id"] == actor
     ):
         return
-    if row["operation"] == "projects.update" and row["resource_type"] == "project":
-        await require_project(conn, actor, row["resource_id"], "operate")
+    if (
+        row["operation"]
+        in ("projects.update", "projects.create", "projects.status", "projects.members")
+        and row["resource_type"] == "project"
+    ):
+        if row["operation"] == "projects.members":
+            user = await active_user(conn, actor)
+            if user["global_role"] != "PLATFORM_ADMIN":
+                raise DomainError(403, "FORBIDDEN", "관리자 권한이 필요합니다.")
+        # A failed create has no project yet; only the current creation permission can recover it.
+        if row["operation"] == "projects.create" and row["status"] == "FAILED":
+            from marketory.projects import require_creator
+
+            await require_creator(conn, actor)
+        else:
+            await require_project(conn, actor, row["resource_id"], "operate")
         return
     raise DomainError(403, "FORBIDDEN", "이 요청 결과를 조회할 권한이 없습니다.")
