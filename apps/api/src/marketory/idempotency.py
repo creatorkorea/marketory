@@ -139,6 +139,8 @@ async def expire(conn, actor, operation, key, cutoff):
         "project",
         "seller",
         "application",
+        "review_application_operator",
+        "review_application_reviewer",
     ):
         raise DomainError(409, "RESOURCE_NOT_TERMINAL", "연결된 작업 결과 확인이 필요합니다.")
     result = await conn.execute(

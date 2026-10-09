@@ -10,11 +10,13 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from marketory.applications import application_router
 from marketory.attachments import attachment_router
 from marketory.auth import Identity
+from marketory.confirmation import confirmation_router
 from marketory.db import transaction
 from marketory.errors import DomainError
 from marketory.idempotency import Change, execute, lookup
 from marketory.permissions import active_user, one, require_project
 from marketory.projects import project_router
+from marketory.reviews import review_router
 from marketory.sellers import seller_router
 
 
@@ -217,6 +219,13 @@ def build_router(settings, verify, storage=None):
             "applications.submit",
             "applications.resubmit",
             "applications.cancel",
+            "applications.confirm",
+            "reviews.start",
+            "reviews.request_info",
+            "reviews.extend_info",
+            "reviews.decision",
+            "reviews.extend_confirmation",
+            "reviews.note",
             "attachments.issue",
             "attachments.complete",
             "attachments.detach",
@@ -233,4 +242,6 @@ def build_router(settings, verify, storage=None):
     router.include_router(seller_router(settings, identity))
     router.include_router(application_router(settings, identity))
     router.include_router(attachment_router(settings, identity, storage))
+    router.include_router(confirmation_router(settings, identity))
+    router.include_router(review_router(settings, identity))
     return router

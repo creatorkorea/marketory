@@ -66,9 +66,9 @@ function ApplicationEditor({
     [toast, setToast] = useState(""),
     [uploadBusy, setUploadBusy] = useState(false),
     [consent, setConsent] = useState(false),
-    [confirm, setConfirm] = useState<"submit" | "resubmit" | "cancel" | null>(
-      null,
-    ),
+    [confirm, setConfirm] = useState<
+      "submit" | "resubmit" | "cancel" | "confirm" | null
+    >(null),
     [reason, setReason] = useState(""),
     [saveState, setSaveState] = useState("");
   const form = useRef<HTMLFormElement>(null),
@@ -127,9 +127,11 @@ function ApplicationEditor({
       setConsent(false);
       if (next.status !== "DRAFT" && next.status !== "NEED_INFO")
         setToast(
-          next.status === "CANCELLED"
-            ? "신청을 취소했어요."
-            : "신청을 접수했어요.",
+          next.status === "CONFIRMED"
+            ? "참가를 확정했어요."
+            : next.status === "CANCELLED"
+              ? "신청을 취소했어요."
+              : "신청을 접수했어요.",
         );
     },
   );
@@ -600,6 +602,33 @@ function ApplicationEditor({
           )}
         </section>
       )}
+      {app.status === "APPROVED" && (
+        <section className="market-section">
+          <h3>참가확정</h3>
+          <p>
+            선정되었습니다. 행사에 참가할 수 있는지 확인한 뒤 확정해 주세요.
+          </p>
+          <p>확정기한 (한국시간): {kstDisplay(app.confirm_due_at)}</p>
+          {app.allowed_actions.includes("confirm") ? (
+            <Button
+              disabled={blocked || dirty}
+              onClick={() => setConfirm("confirm")}
+            >
+              참가확정 내용 확인
+            </Button>
+          ) : (
+            <Notice title="현재 참가확정할 수 없습니다." tone="warning">
+              기한이 지났다면 운영자에게 연장을 요청해 주세요. 자동 취소되지는
+              않습니다.
+            </Notice>
+          )}
+        </section>
+      )}
+      {app.status === "CONFIRMED" && (
+        <Notice title="참가확정이 완료됐어요.">
+          행사 준비 안내와 배치 정보는 추후 내 신청에서 확인해 주세요.
+        </Notice>
+      )}
       {app.allowed_actions.includes("cancel") && (
         <section className="market-section">
           <h3>신청 취소</h3>
@@ -624,14 +653,18 @@ function ApplicationEditor({
           title={
             confirm === "cancel"
               ? `${app.project.name} 신청을 취소할까요?`
-              : `${app.project.name} 신청을 제출할까요?`
+              : confirm === "confirm"
+                ? `${app.project.name} 참가를 확정할까요?`
+                : `${app.project.name} 신청을 제출할까요?`
           }
           confirm={
             confirm === "cancel"
               ? "신청 취소하기"
-              : confirm === "resubmit"
-                ? "보완 제출하기"
-                : "신청 제출하기"
+              : confirm === "confirm"
+                ? "참가확정하기"
+                : confirm === "resubmit"
+                  ? "보완 제출하기"
+                  : "신청 제출하기"
           }
           onCancel={() => setConfirm(null)}
           onConfirm={() => {
@@ -643,19 +676,23 @@ function ApplicationEditor({
               "POST",
               action === "cancel"
                 ? { expected_version: app.version, reason: reason.trim() }
-                : {
-                    expected_version: app.version,
-                    expected_policy_version: app.project.policy_version,
-                    consent_version: app.project.policy_json.consent_version,
-                    consent_accepted: true,
-                  },
+                : action === "confirm"
+                  ? { expected_version: app.version }
+                  : {
+                      expected_version: app.version,
+                      expected_policy_version: app.project.policy_version,
+                      consent_version: app.project.policy_json.consent_version,
+                      consent_accepted: true,
+                    },
             );
           }}
         >
           <p>
             {confirm === "cancel"
               ? `취소 후 재신청할 수 없습니다. 사유: ${reason}`
-              : "서버 확인 후 접수 완료로 표시합니다. 저장된 상품과 첨부 파일, 현재 동의 내용으로 제출합니다."}
+              : confirm === "confirm"
+                ? "참가 의사를 확정합니다. 이후 변경이 생기면 취소 사유를 남기고 운영자에게 알려 주세요."
+                : "서버 확인 후 접수 완료로 표시합니다. 저장된 상품과 첨부 파일, 현재 동의 내용으로 제출합니다."}
           </p>
         </ConfirmDialog>
       )}

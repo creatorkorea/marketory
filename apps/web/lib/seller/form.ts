@@ -43,6 +43,8 @@ export type Attachment = {
   size_bytes: number;
 };
 export type Application = {
+  confirm_due_at?: string | null;
+  confirmed_at?: string | null;
   application_id: string;
   project_id: string;
   status: string;

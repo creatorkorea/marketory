@@ -68,16 +68,24 @@ function List({ session, offset }: { session: MarketSession; offset: number }) {
                   {p.target_team_count.toLocaleString("ko-KR")}팀
                 </p>
               </div>
-              {p.can_manage ? (
+              <div className="actions">
                 <ButtonLink
                   variant="secondary"
-                  href={`/markets/${p.project_id}`}
+                  href={`/markets/${p.project_id}/applications`}
                 >
-                  마켓 설정
+                  신청 검토
                 </ButtonLink>
-              ) : (
-                <span className="muted">조회 권한 · 설정 변경 불가</span>
-              )}
+                {p.can_manage ? (
+                  <ButtonLink
+                    variant="secondary"
+                    href={`/markets/${p.project_id}`}
+                  >
+                    마켓 설정
+                  </ButtonLink>
+                ) : (
+                  <span className="muted">조회 권한 · 설정 변경 불가</span>
+                )}
+              </div>
             </li>
           ))}
         </ul>

@@ -61,6 +61,27 @@ async def require_seller(conn, actor, seller_id):
 
 async def authorize_result(conn, actor, row):
     await active_user(conn, actor)
+    if row["resource_type"] in (
+        "review_application_operator",
+        "review_application_reviewer",
+    ) and row["operation"] in (
+        "reviews.start",
+        "reviews.request_info",
+        "reviews.extend_info",
+        "reviews.decision",
+        "reviews.extend_confirmation",
+        "reviews.note",
+        "applications.confirm",
+    ):
+        from marketory.review_domain import require_review
+
+        await require_review(
+            conn,
+            actor,
+            row["resource_id"],
+            "operate" if row["resource_type"] == "review_application_operator" else "read",
+        )
+        return
     if row["operation"] == "sellers.save" and row["resource_type"] == "seller":
         user = await active_user(conn, actor)
         if user["account_role"] != "SELLER":
@@ -76,6 +97,7 @@ async def authorize_result(conn, actor, row):
             "applications.submit",
             "applications.resubmit",
             "applications.cancel",
+            "applications.confirm",
             "attachments.issue",
             "attachments.complete",
             "attachments.detach",

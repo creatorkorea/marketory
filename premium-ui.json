@@ -3,6 +3,7 @@
   "sourceRoots": ["apps/web/app", "apps/web/components", "apps/web/lib"],
   "locale": "ko-KR",
   "canonicalMap": "UX-CONTRACT.md",
+  "ownership": { "Select/Listbox": "native" },
   "requiredCapabilities": ["Form", "Scrollbar"],
   "requiredCommands": ["unit", "browser", "types", "build"],
   "commands": {

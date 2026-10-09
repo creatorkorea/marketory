@@ -31,7 +31,9 @@ export function useMarketMutation(
         const p = JSON.parse(text) as Pending;
         if (
           !/^[0-9a-f-]{36}$/i.test(p.key) ||
-          !/^(projects\.(create|update|status|members)|sellers\.save|applications\.(create|update|submit|resubmit|cancel)|attachments\.(issue|complete|detach|abandon))$/.test(p.operation)
+          !/^(projects\.(create|update|status|members)|sellers\.save|applications\.(create|update|submit|resubmit|cancel|confirm)|reviews\.(start|request_info|extend_info|decision|extend_confirmation|note)|attachments\.(issue|complete|detach|abandon))$/.test(
+            p.operation,
+          )
         )
           throw new Error();
         setPending(p);

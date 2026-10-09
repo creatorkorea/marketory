@@ -164,6 +164,12 @@ async def application_data(conn, app, project, seller):
             pass
     try:
         before_event_end(project)
+        if (
+            app["status"] == "APPROVED"
+            and app["confirm_due_at"]
+            and datetime.now(timezone.utc) < app["confirm_due_at"] < project["event_end_at"]
+        ):
+            actions.append("confirm")
         if app["status"] in CANCEL_STATES:
             actions.append("cancel")
     except DomainError:

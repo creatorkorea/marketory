@@ -299,6 +299,28 @@ def project_router(settings, identity):
             data = body.model_dump(mode="json", exclude={"expected_version", "reason"})
             if body.event_end_at <= datetime.now(timezone.utc):
                 raise DomainError(422, "EVENT_ENDED", "미래의 행사 종료 시간을 입력해 주세요.")
+            occupied = await one(
+                conn,
+                "SELECT count(*) AS n FROM public.applications WHERE project_id=%s "
+                "AND deleted_at IS NULL AND status IN ('APPROVED','CONFIRMED')",
+                (project_id,),
+            )
+            if occupied["n"] > body.target_team_count:
+                raise DomainError(
+                    409, "CAPACITY_CONFLICT", "선정·확정 인원보다 정원을 줄일 수 없습니다."
+                )
+            deadline = await one(
+                conn,
+                "SELECT application_id FROM public.applications WHERE project_id=%s "
+                "AND deleted_at IS NULL AND (info_due_at >= %s OR confirm_due_at >= %s) LIMIT 1",
+                (project_id, body.event_end_at, body.event_end_at),
+            )
+            if deadline:
+                raise DomainError(
+                    409,
+                    "DEADLINE_CONFLICT",
+                    "기존 보완·확정 기한 이후로 행사 종료를 설정해 주세요.",
+                )
             if project["status"] == "RECRUITING":
                 publishable({**data, "recruit_end_at": body.recruit_end_at})
             changed_policy = any(

@@ -147,7 +147,10 @@ test("public market and authenticated profile keep narrow keyboard layout", asyn
     ),
   ).toBe(true);
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.screenshot({ path: "../../output/seller-profile-desktop.png", fullPage: true });
+  await page.screenshot({
+    path: "../../output/seller-profile-desktop.png",
+    fullPage: true,
+  });
 });
 test("wizard saves, reviews server consent, and prevents duplicate submit", async ({
   page,
@@ -194,7 +197,10 @@ test("wizard saves, reviews server consent, and prevents duplicate submit", asyn
   await expect(
     page.getByRole("status").filter({ hasText: "임시저장됨" }),
   ).toBeVisible();
-  await page.screenshot({ path: "../../output/seller-application-mobile.png", fullPage: true });
+  await page.screenshot({
+    path: "../../output/seller-application-mobile.png",
+    fullPage: true,
+  });
   await page.getByRole("button", { name: "4. 동의 및 확인" }).click();
   await expect(
     page.getByText("테스트용 정책 본문", { exact: true }),
@@ -508,13 +514,11 @@ test("upload conflict refresh synchronizes clean fields before any later save", 
   });
   await page.goto(`/me/applications/${aid}`);
   await page.getByRole("button", { name: "2. 상품과 사진" }).click();
-  await page
-    .getByLabel("상품 사진 선택")
-    .setInputFiles({
-      name: "photo.png",
-      mimeType: "image/png",
-      buffer: Buffer.from("mock bytes"),
-    });
+  await page.getByLabel("상품 사진 선택").setInputFiles({
+    name: "photo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("mock bytes"),
+  });
   await expect(
     page.getByText("다른 변경이 있어 저장을 멈췄어요."),
   ).toBeVisible();
@@ -528,4 +532,49 @@ test("upload conflict refresh synchronizes clean fields before any later save", 
   await expect(page.getByText("임시저장됨", { exact: true })).toBeVisible();
   expect(saved?.expected_version).toBe(7);
   expect(saved?.product_desc).toBe("다른 탭에서 변경한 소개");
+});
+
+test("approved seller explicitly confirms participation and expired deadline stays approved", async ({
+  page,
+}) => {
+  await fixture(page);
+  let app = {
+    ...structuredClone(seed),
+    status: "APPROVED",
+    confirm_due_at: "2027-11-05T09:00:00Z",
+    allowed_actions: ["confirm", "cancel"],
+  };
+  let calls = 0;
+  await page.route(`**/api/backend/applications/${aid}`, (r) =>
+    r.fulfill({ json: { data: app } }),
+  );
+  await page.route(`**/api/backend/applications/${aid}/confirm`, async (r) => {
+    calls++;
+    expect(r.request().postDataJSON()).toEqual({ expected_version: 1 });
+    app = {
+      ...app,
+      version: 2,
+      status: "CONFIRMED",
+      allowed_actions: ["cancel"],
+    };
+    await r.fulfill({ json: { data: app } });
+  });
+  await page.goto(`/me/applications/${aid}`);
+  await page.getByRole("button", { name: "참가확정 내용 확인" }).click();
+  await expect(page.getByRole("dialog")).toContainText("참가를 확정할까요?");
+  await page.getByRole("button", { name: "참가확정하기", exact: true }).click();
+  await expect(page.getByText("참가확정이 완료됐어요.")).toBeVisible();
+  expect(calls).toBe(1);
+  app = {
+    ...app,
+    status: "APPROVED",
+    confirm_due_at: "2020-01-01T00:00:00Z",
+    allowed_actions: ["cancel"],
+  };
+  await page.reload();
+  await expect(page.getByText("현재 참가확정할 수 없습니다.")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "참가확정 내용 확인" }),
+  ).toHaveCount(0);
+  expect(calls).toBe(1);
 });

@@ -280,6 +280,11 @@ function Editor({ session, id }: { session: MarketSession; id?: string }) {
       <ButtonLink variant="secondary" href="/markets">
         마켓 목록
       </ButtonLink>
+      {id && (
+        <ButtonLink variant="secondary" href={`/markets/${id}/applications`}>
+          신청 검토
+        </ButtonLink>
+      )}
       {loadError && (
         <Notice title={loadError} tone="warning">
           <Button onClick={() => void read(loaded)}>다시 확인</Button>
