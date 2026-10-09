@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-10-09T04:51:10.293854+00:00",
+  "status": "PASS",
+  "scope": "Documentation integrity only; product tests are not executed by this tool.",
+  "markdown_files_checked": 24,
+  "local_links_checked": 176,
+  "current_word_sources": 7,
+  "source_hashes_and_generated_content_match": true,
+  "case_counts": {
+    "AC": 44,
+    "E2E": 44
+  },
+  "roadmap_e2e_coverage": 44,
+  "recorded_product_test_runs": 0,
+  "generated_files_checked": 10
+}

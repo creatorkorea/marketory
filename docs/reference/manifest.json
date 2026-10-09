@@ -1,0 +1,50 @@
+{
+  "spec_version": "1.3",
+  "sources": [
+    {
+      "source": "문서_보완본_v1.3/00_변경요약_공통계약_v1.3.docx",
+      "reference": "docs/reference/00-common-contract.md",
+      "sha256": "d131a0b068ebe98751041c0a26b6f50ef22b28cdf6542ff40b6dcdcea57256a9",
+      "tables": 10
+    },
+    {
+      "source": "문서_보완본_v1.3/01_서비스기획서_v1.3.docx",
+      "reference": "docs/reference/01-product.md",
+      "sha256": "cf805e52a2e48e1463bd1e7a13fb40a9cd6d06860872ce0cc7dcbe8e3e67e771",
+      "tables": 20
+    },
+    {
+      "source": "문서_보완본_v1.3/02_업무프로세스_상세설계서_v1.3.docx",
+      "reference": "docs/reference/02-workflow.md",
+      "sha256": "060c0da42b9ad13fffa50e777b95a8d184e1bb11d654be536fd0942bc2369fb6",
+      "tables": 29
+    },
+    {
+      "source": "문서_보완본_v1.3/03_기능명세서_v1.3.docx",
+      "reference": "docs/reference/03-features.md",
+      "sha256": "720a2e0f1739be0f8dead6aa8f2d6a7b58c4e9488a0782d69df480457250a0eb",
+      "tables": 23
+    },
+    {
+      "source": "문서_보완본_v1.3/04_DB_데이터구조_명세서_v1.3.docx",
+      "reference": "docs/reference/04-data-model.md",
+      "sha256": "5dbacf5ec0d3b8e656e6495f882d6b659b9a94a29cb6ed9323216fc8e09d7d3e",
+      "tables": 38
+    },
+    {
+      "source": "문서_보완본_v1.3/05_바이브코딩_개발명세서_v1.3.docx",
+      "reference": "docs/reference/05-development.md",
+      "sha256": "376e5b05de7bf8b7a7c9ba2b7e4353200aa29566d0e37d073cc12fb03c8247bd",
+      "tables": 27
+    },
+    {
+      "source": "문서_보완본_v1.3/06_화면설계서_v1.3.docx",
+      "reference": "docs/reference/06-screens.md",
+      "sha256": "8d12986b992b54f9de6a5869829414361e686315dd81950504ba6a1804181cda",
+      "tables": 3
+    }
+  ],
+  "acceptance_cases": 44,
+  "e2e_cases": 44,
+  "note": "NOT_RUN is a generated baseline; actual runs go in docs/qa/execution-log.csv."
+}

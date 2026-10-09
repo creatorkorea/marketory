@@ -1,0 +1,1 @@
+"""MARKETORY application foundation."""

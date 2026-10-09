@@ -1,0 +1,38 @@
+name: P0 checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17.11
+        env:
+          POSTGRES_USER: marketory
+          POSTGRES_PASSWORD: marketory_local
+          POSTGRES_DB: marketory
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U marketory -d marketory"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      MARKETORY_TEST_DATABASE_URL: postgresql://marketory:marketory_local@127.0.0.1:55432/marketory
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.10.4'
+      - run: uv python install 3.12.10
+      - run: uv sync --project apps/api --locked
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: uv run --project apps/api python docs/tools/verify_docs.py
+      - run: uv run --project apps/api python design-system/tools/build_tokens.py --check
+      - run: uv run --project apps/api python design-system/tools/verify_assets.py
+      - run: docker build -t marketory-api apps/api

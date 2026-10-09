@@ -1,0 +1,45 @@
+id,scenario,expected_result,source,baseline_status
+E2E-01,운영자 새 프로젝트 생성→모집 공개,"새 project_id 생성, 공개 링크 정상",../reference/05-development.md#table-21,NOT_RUN
+E2E-02,신규 셀러 신청→사진→제출,"Seller/Application/Attachment 저장, SUBMITTED",../reference/05-development.md#table-21,NOT_RUN
+E2E-03,기존 셀러가 다른 프로젝트 신청,"Seller 재사용, 새 Application만 생성",../reference/05-development.md#table-21,NOT_RUN
+E2E-04,필수정보 누락과 접수 후 보완,"제출 전 422/DRAFT 유지, 접수 후 NEED_INFO→보완 제출 동작",../reference/05-development.md#table-21,NOT_RUN
+E2E-05,AI 검토 실행,"Evaluation 생성, 원문/점수/근거 표시, 최종상태 미변경",../reference/05-development.md#table-21,NOT_RUN
+E2E-06,운영자 승인/대기/탈락,status + history + audit 동시 반영,../reference/05-development.md#table-21,NOT_RUN
+E2E-07,승인 셀러 참가확정,CONFIRMED 전환,../reference/05-development.md#table-21,NOT_RUN
+E2E-08,부스 추천→수동변경→확정,중복 없이 assignment 저장,../reference/05-development.md#table-21,NOT_RUN
+E2E-09,안내 생성→승인→발송,Communication 상태·발송이력 기록,../reference/05-development.md#table-21,NOT_RUN
+E2E-10,참가취소,"CANCELLED, 부스회수, 대기자 승격 검토 이벤트",../reference/05-development.md#table-21,NOT_RUN
+E2E-11,타 프로젝트 운영,자운대 데이터와 완전 분리,../reference/05-development.md#table-21,NOT_RUN
+E2E-12,현장운영자료 출력,선정/부스/연락처가 지정 형식으로 출력,../reference/05-development.md#table-21,NOT_RUN
+E2E-13,다른 셀러 신청 및 파일 ID로 접근,"404, 개인정보·signed URL·심사정보 미반환",../reference/05-development.md#table-21,NOT_RUN
+E2E-14,미배정 프로젝트 접근 및 권한 회수,"API·파일·출력 차단, 기존 로그인 세션도 재검사",../reference/05-development.md#table-21,NOT_RUN
+E2E-15,동일 셀러가 같은 행사에 동시 제출,"신청 1개 유지, 중복 요청은 기존 결과 또는 409",../reference/05-development.md#table-21,NOT_RUN
+E2E-16,같은 부스 동시 확정 및 다른 프로젝트 ID 혼합,"1건만 성공, 나머지 409/404, 교차 프로젝트 연결 0건",../reference/05-development.md#table-21,NOT_RUN
+E2E-17,참가확정과 취소 동시 실행,"version 일치 1건만 성공, 상태·배치·이력 원자적 일치",../reference/05-development.md#table-21,NOT_RUN
+E2E-18,AI 실패 및 보완 도중 늦게 도착한 결과,"FAILED/이전 revision 기록, 신청 최종상태 미변경, 낡은 평가 표시",../reference/05-development.md#table-21,NOT_RUN
+E2E-19,발송 응답 유실 후 재시도,"UNKNOWN 표시, 제공사 조회 또는 수동 확인 전 재발송 차단",../reference/05-development.md#table-21,NOT_RUN
+E2E-20,승인 후 메시지 수정 또는 셀러 취소,"승인 무효화, READY/QUEUED 대상 발송 차단, 이력 유지",../reference/05-development.md#table-21,NOT_RUN
+E2E-21,모집 마감 후 신규 제출과 요청된 보완 제출,"신규 차단, NEED_INFO는 info_due_at까지 허용",../reference/05-development.md#table-21,NOT_RUN
+E2E-22,계정·역할·상태 필드 변조,"대량 필드 주입 차단, 직접 DB 쓰기 및 권한 상승 실패",../reference/05-development.md#table-21,NOT_RUN
+E2E-23,확정기한 만료 및 모집정원 초과,"자동 취소 없음, 경고·기한연장 가능, 초과 승인은 409",../reference/05-development.md#table-21,NOT_RUN
+E2E-24,필수 동의 미체크 및 행사 종료 후 수정,"제출 차단, 완료 행사 신규 업무 차단, 허용된 출력·열람·기존 작업 결과 확인 유지",../reference/05-development.md#table-21,NOT_RUN
+E2E-25,공개 셀러 최초 OTP 인증과 재로그인,"users는 1개, global_role=USER/account_role=SELLER, name 미입력은 프로필 단계로 이동, STAFF 자가 지정 차단",../reference/05-development.md#table-21,NOT_RUN
+E2E-26,안내 수신처 생성 및 계정 이메일 변경,"최초 검증 이메일 snapshot 저장, 계정 변경만으로 기존 신청 불변, 명시 동기화 시 관련 승인 무효화",../reference/05-development.md#table-21,NOT_RUN
+E2E-27,보완기한 만료 후 운영자 연장,"만료 중 resubmit 409, 기한 연장 후 SUBMITTED 가능, 변경 전후·사유·안내 초안 기록",../reference/05-development.md#table-21,NOT_RUN
+E2E-28,행사 당일 부스 변경과 종료 경계,"event_end_at 이전 변경 가능, 경계 이후 신규 업무 차단, COMPLETED 후 기존 UNKNOWN 확인은 허용",../reference/05-development.md#table-21,NOT_RUN
+E2E-29,UNKNOWN 결과 확인 및 중복 확인,"근거 있는 조회/수동 확인만 SENT/FAILED 전환, 미확인은 UNKNOWN 유지, 같은 요청 중복 처리 없음",../reference/05-development.md#table-21,NOT_RUN
+E2E-30,실패 발송 수정과 동일 내용 재시도,"동일 내용 재시도는 같은 작업·키, 내용/수신처 수정은 새 작업·키·재승인, 이전 이력 보존",../reference/05-development.md#table-21,NOT_RUN
+E2E-31,두 셀러 부스 교환과 중간 실패,"두 배치 모두 원자적 교환, 실패 시 기존 둘 다 유지, 한 작업의 알림 초안은 커밋 후 생성",../reference/05-development.md#table-21,NOT_RUN
+E2E-32,첨부 변경 및 만료 전 업로드 URL 재사용,"DRAFT/허용 보완 항목만 변경, 요청 시와 complete 시 재검증, revision 증가, 제출 후 기존 객체 덮어쓰기 차단",../reference/05-development.md#table-21,NOT_RUN
+E2E-33,VIEWER와 REVIEWER 화면/API/출력 접근,"VIEWER 집계만, REVIEWER 검수·마스킹 조회만, 직접 API·다운로드 우회 차단",../reference/05-development.md#table-21,NOT_RUN
+E2E-34,CLOSED 행사 재검토 전환,"사유·version·event_end_at 검사 후 REVIEWING, 종료 후 또는 무권한 재개 차단",../reference/05-development.md#table-21,NOT_RUN
+E2E-35,시간 초과 회수 후 늦은 worker 응답,"claim_token과 상태가 일치하는 작업만 결과 반영, 늦은 응답은 최종 상태 덮어쓰기 금지",../reference/05-development.md#table-21,NOT_RUN
+E2E-36,안내 승인과 발송 요청 분리,"approve 후 READY 유지·외부 호출 0회, send 후 QUEUED, worker만 SENDING으로 전환",../reference/05-development.md#table-21,NOT_RUN
+E2E-37,QUEUED 상태에서 대상 변경 또는 행사 종료,"worker와 같은 잠금 규칙으로 발송 철회·변경 반영, 최신성 검사 실패 시 외부 호출 0회; QUEUED에 남겨 두지 않음",../reference/05-development.md#table-21,NOT_RUN
+E2E-38,요청 처리 중 커밋 전 프로세스 중단,"업무 변경과 idempotency 레코드 모두 롤백, 같은 키·본문 재시도 시 1회 반영",../reference/05-development.md#table-21,NOT_RUN
+E2E-39,커밋 직후 응답 유실 또는 worker 재시작,"같은 키 재시도는 기존 결과·작업 ID 반환, 중복 신청/발송 작업/첨부 생성 없음; QUEUED 작업 복구",../reference/05-development.md#table-21,NOT_RUN
+E2E-40,같은 요청 동시 실행과 키 재사용 오류,"동일 키·본문은 직렬 처리·동일 결과, 다른 본문은 409; 권한 회수 후 저장 결과 재조회도 차단",../reference/05-development.md#table-21,NOT_RUN
+E2E-41,사진 10장 순차 완료와 제출,"파일별 최신 version/revision으로 의도 발급·업로드·완료, 10개 첨부 보존, 미완료가 있으면 제출 비활성화",../reference/05-development.md#table-21,NOT_RUN
+E2E-42,사진 완료 응답 유실과 다른 탭의 수정,"응답 유실은 같은 complete 키·본문 재시도로 복구; 타 탭 실제 수정은 409 후 재조회, 업로드 의도 version을 임의 덮어쓰지 않음",../reference/05-development.md#table-21,NOT_RUN
+E2E-43,QUEUED 수정과 worker 동시 실행,시도 없는 QUEUED는 대기 취소·승인 초기화·내용 수정·DRAFT 전환이 함께 커밋. worker가 먼저 SENDING이면 수정 409. 양쪽 동시 성공·외부 중복 호출 없음,../reference/05-development.md#table-21,NOT_RUN
+E2E-44,결과 본문 만료 후 요청 재사용,"만료 처리와 재시도 경합에서도 기존 업무 1회 유지. EXPIRED에는 응답·해시·resource 없음. 동일/다른 본문 재요청과 조회 모두 410, 행 없는 조회만 202. 미종료 작업 만료 차단, 다른 actor 기록 비노출",../reference/05-development.md#table-21,NOT_RUN

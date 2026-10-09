@@ -1,0 +1,164 @@
+{
+  "findings": [
+    {
+      "severity": "warning",
+      "path": "colors.primary-hover",
+      "message": "'primary-hover' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.primary-pressed",
+      "message": "'primary-pressed' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.surface-subtle",
+      "message": "'surface-subtle' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.selected",
+      "message": "'selected' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.text",
+      "message": "'text' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.text-secondary",
+      "message": "'text-secondary' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.border",
+      "message": "'border' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.control-border",
+      "message": "'control-border' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.focus",
+      "message": "'focus' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.success",
+      "message": "'success' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.success-bg",
+      "message": "'success-bg' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.warning",
+      "message": "'warning' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.warning-bg",
+      "message": "'warning-bg' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.danger",
+      "message": "'danger' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.danger-bg",
+      "message": "'danger-bg' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.info",
+      "message": "'info' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.info-bg",
+      "message": "'info-bg' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.neutral",
+      "message": "'neutral' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.neutral-bg",
+      "message": "'neutral-bg' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.disabled",
+      "message": "'disabled' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.disabled-text",
+      "message": "'disabled-text' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.tag-ceramic",
+      "message": "'tag-ceramic' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.tag-bakery",
+      "message": "'tag-bakery' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.tag-textile",
+      "message": "'tag-textile' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "warning",
+      "path": "colors.tag-plant",
+      "message": "'tag-plant' is defined but never referenced by any component.",
+      "rule": "orphaned-tokens"
+    },
+    {
+      "severity": "info",
+      "message": "Design system defines 29 colors, 1 typography scale, 4 rounding levels, 8 spacing tokens, 5 components.",
+      "rule": "token-summary"
+    }
+  ],
+  "summary": {
+    "errors": 0,
+    "warnings": 25,
+    "infos": 1
+  }
+}

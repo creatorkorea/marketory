@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.png binary
+*.woff2 binary
+*.docx binary
+# Preserve upstream font licenses and generated reference formatting.
+**/OFL.txt whitespace=-blank-at-eol
+docs/reference/*.md whitespace=-blank-at-eof

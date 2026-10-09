@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-08",
+  "surface": "Codex in-app browser",
+  "url": "http://127.0.0.1:8766/preview.html",
+  "checks": [
+    {"viewport_width":390,"viewport_height":844,"document_scroll_width":375,"font_ready":true,"visual_inspection":"header, color swatches, buttons and form fields"},
+    {"viewport_width":1440,"viewport_height":1024,"document_scroll_width":1425,"font_ready":true,"visual_inspection":"buttons, form fields, badges, stepper and sample table"}
+  ],
+  "font_family": "Pretendard Variable",
+  "temporary_viewport_reset": true,
+  "scope": "Static specimen page. Not application end-to-end, screen reader, full keyboard, or complete breakpoint certification."
+}

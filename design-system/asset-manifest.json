@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "created": "2026-10-08",
+  "image_method": "built-in Image Gen",
+  "assets": [
+    {
+      "path": "assets/boards/01-foundations.png",
+      "bytes": 1370077,
+      "sha256": "6ad4125651d24f4bf05c82e460e4e225fda30bce0c1ab204dee566ad6dc70f3e",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "usage": "reference board only; not runtime controls"
+    },
+    {
+      "path": "assets/boards/02-domain-components.png",
+      "bytes": 1513213,
+      "sha256": "5c968652315c67fffe69ff9aa95fd7f2814f0fd6b4f359f5c3c4c74442396056",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "usage": "reference board only; not runtime controls"
+    },
+    {
+      "path": "assets/boards/03-feedback.png",
+      "bytes": 1369123,
+      "sha256": "b321d5913e8a7558d91875df9171b553bbd8f5ce4d503cbce51bab7bf2127ed6",
+      "width": 1536,
+      "height": 1024,
+      "mode": "RGB",
+      "usage": "reference board only; not runtime controls"
+    },
+    {
+      "path": "assets/brand/marketory-stall.png",
+      "bytes": 503811,
+      "sha256": "d6c5987e4c0e61b119307756017024639c481f258579114f6af6ba7eee890936",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "transparent_fraction": 0.742,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "usage": "transparent brand PNG; pair with live Pretendard text"
+    },
+    {
+      "path": "assets/fonts/OFL.txt",
+      "bytes": 4418,
+      "sha256": "d31ddd9f2bed32fd7e302a205cf2380ba0de6529152d239ef99cfb6f261bfc04"
+    },
+    {
+      "path": "assets/fonts/PretendardVariable.woff2",
+      "bytes": 2057688,
+      "sha256": "9599f12fd42fc0bce1cd50b47a0c022e108d7aa64dd0d1bb0ed44f3282d900b4"
+    },
+    {
+      "path": "assets/fonts/source.json",
+      "bytes": 190,
+      "sha256": "14c15012b9759c880388104c46fe0db4616b8344bcb3a791a3e0132d0ea788e0"
+    }
+  ]
+}

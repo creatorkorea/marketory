@@ -1,0 +1,37 @@
+{
+  "name": "marketory",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "packages/types"
+  ],
+  "packageManager": "npm@11.8.0",
+  "engines": {
+    "node": "24.x",
+    "npm": ">=11 <12"
+  },
+  "scripts": {
+    "assets:sync": "node scripts/sync-assets.mjs",
+    "assets:check": "node scripts/sync-assets.mjs --check",
+    "dev": "npm run dev --workspace @marketory/web",
+    "build": "npm run build --workspace @marketory/web",
+    "typecheck": "npm run typecheck --workspace @marketory/web",
+    "api:dev": "uv run --project apps/api --locked uvicorn marketory.main:app --reload --reload-dir apps/api/src --host 127.0.0.1 --port 8000",
+    "worker:dev": "uv run --project apps/api --locked python -m marketory.worker",
+    "api:test": "uv run --project apps/api --locked pytest -c apps/api/pyproject.toml apps/api/tests",
+    "api:lint": "uv run --project apps/api ruff check apps/api scripts/export_openapi.py",
+    "types:generate": "uv run --project apps/api python scripts/export_openapi.py && openapi-typescript packages/types/openapi.json -o packages/types/src/api.d.ts",
+    "types:check": "node scripts/check-types.mjs",
+    "web:test": "npm run test --workspace @marketory/web",
+    "web:test:browser": "npm run test:browser --workspace @marketory/web",
+    "check": "npm run assets:check && npm run types:check && npm run typecheck && npm run web:test && npm run api:lint && npm run api:test"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

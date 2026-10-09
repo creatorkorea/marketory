@@ -1,0 +1,202 @@
+{
+  "token_drift": false,
+  "contrast_pairs": [
+    {
+      "foreground": "text",
+      "background": "background",
+      "ratio": 12.62,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "text-secondary",
+      "background": "background",
+      "ratio": 5.77,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "text",
+      "background": "surface",
+      "ratio": 13.16,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "text-secondary",
+      "background": "surface",
+      "ratio": 6.02,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "on-primary",
+      "background": "primary",
+      "ratio": 9.77,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "on-primary",
+      "background": "primary-hover",
+      "ratio": 12.1,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "on-primary",
+      "background": "primary-pressed",
+      "ratio": 14.2,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "on-primary",
+      "background": "danger",
+      "ratio": 7.11,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "primary",
+      "background": "selected",
+      "ratio": 8.33,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "disabled-text",
+      "background": "disabled",
+      "ratio": 4.56,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "control-border",
+      "background": "surface",
+      "ratio": 3.29,
+      "minimum": 3,
+      "passed": true
+    },
+    {
+      "foreground": "control-border",
+      "background": "background",
+      "ratio": 3.15,
+      "minimum": 3,
+      "passed": true
+    },
+    {
+      "foreground": "focus",
+      "background": "surface",
+      "ratio": 5.89,
+      "minimum": 3,
+      "passed": true
+    },
+    {
+      "foreground": "focus",
+      "background": "background",
+      "ratio": 5.65,
+      "minimum": 3,
+      "passed": true
+    },
+    {
+      "foreground": "success",
+      "background": "success-bg",
+      "ratio": 6.99,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "warning",
+      "background": "warning-bg",
+      "ratio": 6.47,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "danger",
+      "background": "danger-bg",
+      "ratio": 5.97,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "info",
+      "background": "info-bg",
+      "ratio": 6.97,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "neutral",
+      "background": "neutral-bg",
+      "ratio": 5.63,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "text",
+      "background": "tag-ceramic",
+      "ratio": 9.86,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "text",
+      "background": "tag-bakery",
+      "ratio": 9.38,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "text",
+      "background": "tag-textile",
+      "ratio": 10.07,
+      "minimum": 4.5,
+      "passed": true
+    },
+    {
+      "foreground": "text",
+      "background": "tag-plant",
+      "ratio": 10.37,
+      "minimum": 4.5,
+      "passed": true
+    }
+  ],
+  "asset_count": 7,
+  "markdown_local_links_checked": 22,
+  "components_documented": 34,
+  "font_signature": "wOF2",
+  "font_license_present": true,
+  "design_lint": {
+    "errors": 0,
+    "warnings": 25,
+    "infos": 1
+  },
+  "lint_warning_explanation": "The designmd linter only tracks frontmatter component references. All 29 colors are consumed by foundation.css; checked separately.",
+  "browser_visual_qa": {
+    "date": "2026-10-08",
+    "surface": "Codex in-app browser",
+    "url": "http://127.0.0.1:8766/preview.html",
+    "checks": [
+      {
+        "viewport_width": 390,
+        "viewport_height": 844,
+        "document_scroll_width": 375,
+        "font_ready": true,
+        "visual_inspection": "header, color swatches, buttons and form fields"
+      },
+      {
+        "viewport_width": 1440,
+        "viewport_height": 1024,
+        "document_scroll_width": 1425,
+        "font_ready": true,
+        "visual_inspection": "buttons, form fields, badges, stepper and sample table"
+      }
+    ],
+    "font_family": "Pretendard Variable",
+    "temporary_viewport_reset": true,
+    "scope": "Static specimen page. Not application end-to-end, screen reader, full keyboard, or complete breakpoint certification."
+  },
+  "app_integration_tested": false
+}

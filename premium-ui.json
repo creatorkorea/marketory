@@ -1,0 +1,15 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["apps/web/app", "apps/web/components", "apps/web/lib"],
+  "locale": "ko-KR",
+  "canonicalMap": "UX-CONTRACT.md",
+  "requiredCapabilities": ["Form", "Scrollbar"],
+  "requiredCommands": ["unit", "browser", "types", "build"],
+  "commands": {
+    "unit": "npm run web:test",
+    "browser": "npm run web:test:browser",
+    "types": "npm run typecheck",
+    "build": "npm run build"
+  },
+  "evidence": { "failurePaths": "apps/web/tests/browser/auth.spec.ts" }
+}
