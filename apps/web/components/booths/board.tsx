@@ -223,6 +223,14 @@ function BoardContent({ id, session }: { id: string; session: MarketSession }) {
         <ButtonLink variant="secondary" href={`/markets/${id}/applications`}>
           신청 검토
         </ButtonLink>
+        {board?.can_manage && (
+          <ButtonLink
+            variant="secondary"
+            href={`/markets/${id}/communications`}
+          >
+            셀러 안내
+          </ButtonLink>
+        )}
       </nav>
       {loadError && (
         <Notice tone="warning" title={loadError}>

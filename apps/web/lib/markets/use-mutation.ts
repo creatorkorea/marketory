@@ -31,7 +31,7 @@ export function useMarketMutation(
         const p = JSON.parse(text) as Pending;
         if (
           !/^[0-9a-f-]{36}$/i.test(p.key) ||
-          !/^(projects\.(create|update|status|members)|sellers\.save|applications\.(create|update|submit|resubmit|cancel|confirm)|booths\.(create|update|draft|confirm|release)|reviews\.(start|request_info|extend_info|decision|extend_confirmation|note)|attachments\.(issue|complete|detach|abandon))$/.test(
+          !/^(communications\.(generate|approve|send|retry|revise|resolve)|projects\.(create|update|status|members)|sellers\.save|applications\.(create|update|submit|resubmit|cancel|confirm)|booths\.(create|update|draft|confirm|release)|reviews\.(start|request_info|extend_info|decision|extend_confirmation|note)|attachments\.(issue|complete|detach|abandon))$/.test(
             p.operation,
           )
         )

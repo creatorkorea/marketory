@@ -13,3 +13,5 @@ P1부터 Supabase CLI migration을 순차 추가한다. 적용은 API/worker 시
 공개 schema 테이블에는 권한·RLS 정책을 같은 migration에 포함한다. DB 연결 계정이 RLS를 우회할 수 있는 경우 API의 소유권·프로젝트 권한 검사로 대체되었다고 가정하지 말고 양쪽 경계를 검증한다.
 
 2026-10-09: 실제 Supabase 프로젝트 `xtuznofafxlwlggnolns`에 CLI 2.120.0으로 foundation을 적용했다. 적용 전 업무 테이블이 없는 상태와 dry-run 대상 한 건을 확인했다. 원격 `supabase_migrations.schema_migrations`에 version `202610090001`, name `foundation`을 확인했고, 업무 테이블 6개의 RLS 및 anon/authenticated 접근 차단, 제약 trigger 3개를 조회했다. 로컬 API가 이 DB에 연결해 readiness 200을 반환했다. 실제 OTP·업무 E2E·외부 API 배포 검증은 별도다. 상세 상태는 [인증 연결 기록](../../docs/AUTH-SETUP.md)을 참고한다.
+
+2026-10-12: `20261011134640_communications.sql`은 안내 초안·발송 시도·결과 확인 이력, 변경 무효화와 미확정 작업의 요청 결과 만료 방지를 추가한다. 실제 프로젝트에 단독 dry-run 후 적용했으며 3개 테이블의 RLS·클라이언트 grant 0개와 migration 이력을 확인했다. [메일 기능과 검증](../../docs/COMMUNICATIONS.md)을 참고한다.

@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     database_url: SecretStr | None = None
     cors_origins: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     worker_poll_seconds: float = Field(default=10, ge=1, le=300)
+    email_delivery_enabled: bool = False
+    resend_api_key: SecretStr | None = None
+    email_from: str = Field(default="마켓토리 <marketory@send.creatorkorea.org>", min_length=1)
+    email_timeout_seconds: float = Field(default=15, gt=0, le=60)
+    email_claim_timeout_seconds: float = Field(default=120, gt=0, le=3600)
     supabase_url: str | None = None
     supabase_publishable_key: SecretStr | None = None
     supabase_secret_key: SecretStr | None = None
@@ -25,6 +30,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_environment(self):
+        if self.email_claim_timeout_seconds <= self.email_timeout_seconds:
+            raise ValueError("Email claim timeout must exceed request timeout")
+        if not self.email_from.strip():
+            raise ValueError("Email sender required")
         if self.supabase_url and not self.supabase_url.startswith("https://"):
             raise ValueError("Supabase authentication requires HTTPS")
         if self.database_url and not self.database_url.get_secret_value().strip():

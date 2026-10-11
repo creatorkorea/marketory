@@ -22,6 +22,10 @@ function classify(reply: Reply): Recovery {
   if (status === 403 || status === 404) return { state: "forbidden", body };
   if (status === 410) return { state: "expired", body };
   if (body.code === "NEEDS_OPERATOR_REVIEW") return { state: "review", body };
+  // A communication queue acceptance is a completed API mutation, not delivery.
+  // Generic 202/in-progress replies must still use the original request recovery.
+  const data = body.data as Record<string, unknown> | undefined;
+  if (status === 202 && !body.code && data?.send_status === "QUEUED" && typeof data.communication_id === "string") return { state: "succeeded", body };
   if (status === 202 || status >= 500 || status === 429 || body.code === "REQUEST_IN_PROGRESS") return { state: "unresolved", body };
   if (status === 409) return { state: "conflict", body };
   if (status >= 200 && status < 300 && body.data && typeof body.data === "object") return { state: "succeeded", body };

@@ -1,9 +1,9 @@
 {
-  "checked_at": "2026-10-09T04:51:10.293854+00:00",
+  "checked_at": "2026-10-11T16:03:40.385748+00:00",
   "status": "PASS",
   "scope": "Documentation integrity only; product tests are not executed by this tool.",
-  "markdown_files_checked": 24,
-  "local_links_checked": 176,
+  "markdown_files_checked": 34,
+  "local_links_checked": 196,
   "current_word_sources": 7,
   "source_hashes_and_generated_content_match": true,
   "case_counts": {

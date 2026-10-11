@@ -99,6 +99,11 @@ function List({
           부스 배치
         </ButtonLink>
       )}
+      {data && (session.admin || data.role === "OPERATOR") && (
+        <ButtonLink href={`/markets/${id}/communications`} variant="secondary">
+          셀러 안내
+        </ButtonLink>
+      )}
       {data && <h2>{data.project.name}</h2>}
       {!summary && (
         <form

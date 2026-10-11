@@ -9,7 +9,7 @@ from marketory.worker import run_worker
 
 
 def test_live_does_not_require_database():
-    with TestClient(create_app(Settings(database_url=None))) as client:
+    with TestClient(create_app(Settings(_env_file=None, database_url=None))) as client:
         assert client.get("/health/live").json() == {"status": "ok"}
         assert client.get("/health/ready").status_code == 503
 
@@ -22,7 +22,9 @@ def test_ready_success_and_failure_do_not_leak_secrets():
         raise RuntimeError("postgresql://secret:password@internal/db")
 
     for probe, status in [(healthy, 200), (broken, 503)]:
-        with TestClient(create_app(Settings(database_url=None), probe=probe)) as client:
+        with TestClient(
+            create_app(Settings(_env_file=None, database_url=None), probe=probe)
+        ) as client:
             response = client.get("/health/ready")
             assert response.status_code == status
             assert "password" not in response.text
@@ -30,7 +32,7 @@ def test_ready_success_and_failure_do_not_leak_secrets():
 
 
 def test_cors_only_allows_configured_origin():
-    with TestClient(create_app(Settings(database_url=None))) as client:
+    with TestClient(create_app(Settings(_env_file=None, database_url=None))) as client:
         for origin, allowed in [("http://localhost:3000", True), ("https://attacker.test", False)]:
             response = client.options(
                 "/health/live",
@@ -44,9 +46,14 @@ def test_cors_only_allows_configured_origin():
 
 def test_production_requires_database_and_explicit_origins():
     with pytest.raises(ValueError):
-        Settings(environment="production", database_url=None)
+        Settings(_env_file=None, environment="production", database_url=None)
     with pytest.raises(ValueError):
-        Settings(environment="production", database_url="postgresql://x", cors_origins=["*"])
+        Settings(
+            _env_file=None,
+            environment="production",
+            database_url="postgresql://x",
+            cors_origins=["*"],
+        )
 
 
 def test_invalid_settings_do_not_expose_database_password():
@@ -86,3 +93,24 @@ def test_stopped_worker_does_not_probe():
         await run_worker(stop, probe, interval=1)
 
     asyncio.run(scenario())
+
+
+def test_worker_dispatches_after_healthy_probe_and_recovers_handler_errors(caplog):
+    async def scenario():
+        stop = asyncio.Event()
+        calls = []
+
+        async def probe():
+            return True
+
+        async def handler():
+            calls.append(1)
+            if len(calls) == 1:
+                raise RuntimeError("secret-should-not-log")
+            stop.set()
+
+        await asyncio.wait_for(run_worker(stop, probe, 0.001, handler), timeout=1)
+        assert len(calls) == 2
+
+    asyncio.run(scenario())
+    assert "secret-should-not-log" not in caplog.text

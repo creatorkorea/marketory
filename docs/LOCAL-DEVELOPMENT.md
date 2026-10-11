@@ -48,7 +48,7 @@ npm.cmd run dev
 - API: http://127.0.0.1:8000/docs — health·bootstrap·본인/프로젝트·요청 결과 조회 계약.
 - /health/live: 프로세스 응답이면 200. DB 연결을 의미하지 않는다.
 - /health/ready: 실제 SELECT 1 성공 시 200, 미설정·장애 시 503.
-- worker: 주기적 DB 생존 프로브와 종료 처리. 로그의 handlers=not_configured는 업무 큐 미구현을 뜻한다.
+- worker: DB 생존 확인과 운영 안내 메일 큐 처리. 발송은 기본 비활성화이며 `MARKETORY_EMAIL_DELIVERY_ENABLED=true`와 서버 전용 Resend 키가 있어야 한다. [메일 설정과 상태](COMMUNICATIONS.md)를 먼저 확인한다.
 - 웹 /api/health는 서버 전용 API_BASE_URL의 생존 응답만 중계한다. 설정이 없거나 응답 실패 시 503이며 호스트·비밀값을 반환하지 않는다.
 
 종료는 각 터미널에서 Ctrl+C. Docker DB는 `docker compose stop db`로 중지한다. 파일 보존용 volume을 삭제하는 명령은 기본 절차에 포함하지 않는다.
@@ -65,7 +65,7 @@ uv run --project apps/api python design-system/tools/build_tokens.py --check
 uv run --project apps/api python design-system/tools/verify_assets.py
 ```
 
-테스트 DB 변수가 없으면 DB 통합 테스트들이 SKIP된다. 전체 DB 검증을 주장하려면 전용 로컬/CI DB 변수를 설정하고 실행한다. P0는 TEMP 테이블, P1/P3는 별도 `marketory_test_<uuid>` DB를 생성·검증·제거한다. DB 생성 권한이 필요하고 loopback 호스트만 허용한다. 일반 marketory DB의 업무 테이블에는 migration을 자동 적용하지 않는다. worker --once는 DB 확인 성공에0, 실패에1로 종료한다. Python async 진입점은 Windows에서 SelectorEventLoop를 사용한다.
+테스트 DB 변수가 없으면 DB 통합 테스트들이 SKIP된다. 전체 DB 검증을 주장하려면 전용 로컬/CI DB 변수를 설정하고 실행한다. P0는 TEMP 테이블, P1/P3는 별도 `marketory_test_<uuid>` DB를 생성·검증·제거한다. DB 생성 권한이 필요하고 loopback 호스트만 허용한다. 일반 marketory DB의 업무 테이블에는 migration을 자동 적용하지 않는다. worker --once는 발송 비활성화 시 DB 확인만 한다. 발송 활성화 시 오래된 처리 복구와 대기 메일 한 건 처리를 수행할 수 있으므로, 단순 상태 확인 명령으로 사용하지 않는다. Python async 진입점은 Windows에서 SelectorEventLoop를 사용한다.
 
 실제 인증 연결에는 `.env.example`의 MARKETORY_SUPABASE_URL·MARKETORY_SUPABASE_PUBLISHABLE_KEY를 설정해야 한다. 미설정 상태의 보호 API는503이며 테스트용 로그인 경로를 제공하지 않는다. `/login`·`/account`와 요청 복구 UI는 구현되어 있고 실제 OTP 수신 검증은 후속이다. 웹 설정·테스트·Git 상태는 [인증 연결 안내](AUTH-SETUP.md)를 따른다.
 

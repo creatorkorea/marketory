@@ -21,6 +21,8 @@ export async function relay(
   const project = segments[0] === "projects" && uuid.test(segments[1] ?? "");
   const application =
     segments[0] === "applications" && uuid.test(segments[1] ?? "");
+  const communication =
+    segments[0] === "communications" && uuid.test(segments[1] ?? "");
   const attachment =
     segments[0] === "attachments" && uuid.test(segments[1] ?? "");
   const publicRead =
@@ -33,6 +35,14 @@ export async function relay(
   const allowed =
     (request.method === "POST" && path === "auth/bootstrap") ||
     publicRead ||
+    (path === "communications/generate" && request.method === "POST") ||
+    (communication && segments.length === 2 && request.method === "GET") ||
+    (communication &&
+      segments.length === 3 &&
+      request.method === "POST" &&
+      ["approve", "send", "retry", "revise", "resolve"].includes(
+        segments[2],
+      )) ||
     (path === "me/seller" &&
       ["GET", "POST", "PATCH"].includes(request.method)) ||
     (path === "me/applications" && request.method === "GET") ||
@@ -81,6 +91,8 @@ export async function relay(
       segments.length === 3 &&
       request.method === "GET" &&
       [
+        "communications",
+        "communication-targets",
         "settings",
         "members",
         "applications",
@@ -109,6 +121,12 @@ export async function relay(
           segments[0] === "me" &&
           segments[1] === "requests" &&
           [
+            "communications.generate",
+            "communications.approve",
+            "communications.send",
+            "communications.retry",
+            "communications.revise",
+            "communications.resolve",
             "auth.bootstrap",
             "projects.update",
             "projects.create",
@@ -188,7 +206,9 @@ export async function relay(
     const target = new URL(`/api/${path}`, base);
     if (
       (["projects", "me/applications"].includes(path) ||
-        (project && segments.length === 3 && segments[2] === "applications")) &&
+        (project &&
+          segments.length === 3 &&
+          ["applications", "communications"].includes(segments[2]))) &&
       request.method === "GET"
     ) {
       const query = new URL(request.url).searchParams;

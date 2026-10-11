@@ -141,8 +141,39 @@ async def expire(conn, actor, operation, key, cutoff):
         "application",
         "review_application_operator",
         "review_application_reviewer",
+        "communication",
     ):
         raise DomainError(409, "RESOURCE_NOT_TERMINAL", "연결된 작업 결과 확인이 필요합니다.")
+    if row["resource_type"] == "communication":
+        reference = await one(
+            conn,
+            "SELECT project_id,application_id FROM public.communications WHERE communication_id=%s",
+            (row["resource_id"],),
+        )
+        if reference:
+            await one(
+                conn,
+                "SELECT project_id FROM public.projects WHERE project_id=%s FOR UPDATE",
+                (reference["project_id"],),
+            )
+            await one(
+                conn,
+                "SELECT application_id FROM public.applications WHERE application_id=%s FOR UPDATE",
+                (reference["application_id"],),
+            )
+        message = await one(
+            conn,
+            "SELECT send_status FROM public.communications WHERE communication_id=%s FOR UPDATE",
+            (row["resource_id"],),
+        )
+        unresolved = await one(
+            conn,
+            "SELECT attempt_id FROM public.communication_attempts "
+            "WHERE communication_id=%s AND status IN ('SENDING','UNKNOWN') LIMIT 1",
+            (row["resource_id"],),
+        )
+        if not message or message["send_status"] not in ("SENT", "FAILED") or unresolved:
+            raise DomainError(409, "RESOURCE_NOT_TERMINAL", "발송 결과 확인이 끝나지 않았습니다.")
     result = await conn.execute(
         """UPDATE public.api_idempotency SET status='EXPIRED',
         response_json=NULL,request_hash=NULL,resource_type=NULL,resource_id=NULL,http_status=NULL,

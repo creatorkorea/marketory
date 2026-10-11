@@ -71,3 +71,23 @@ describe("uncertain request recovery", () => {
     expect([...entries.values()].every((value) => /^[0-9a-f-]{36}$/.test(value))).toBe(true);
   });
 });
+
+describe("communication queue acceptance", () => {
+  const accepted: Reply = {status:202,body:{data:{communication_id:"message-id",send_status:"QUEUED"}}};
+  it("settles a queue acceptance without polling or promising delivery", async () => {
+    const lookup=vi.fn();
+    const result=await recover({execute:async()=>accepted,lookup,signal:signal()});
+    expect(result.state).toBe("succeeded"); expect(lookup).not.toHaveBeenCalled();
+  });
+  it("settles the saved 202 result after response loss", async () => {
+    const execute=vi.fn();
+    const result=await recover({execute,lookup:async()=>({status:200,body:{outcome:"SUCCEEDED",http_status:202,response:accepted.body}}),signal:signal(),resume:true});
+    expect(result.state).toBe("succeeded"); expect(execute).not.toHaveBeenCalled();
+  });
+  it("keeps generic and REQUEST_IN_PROGRESS 202 unresolved",async()=>{
+    for(const body of [{data:{job:"pending"}},{code:"REQUEST_IN_PROGRESS",...accepted.body}]) {
+      const result=await recover({execute:async()=>({status:202,body}),lookup:async()=>unresolved,signal:signal(),automatic:false});
+      expect(result.state).toBe("unresolved");
+    }
+  });
+});

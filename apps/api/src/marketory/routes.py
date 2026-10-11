@@ -11,6 +11,7 @@ from marketory.applications import application_router
 from marketory.attachments import attachment_router
 from marketory.auth import Identity
 from marketory.booths import booth_router
+from marketory.communications import communication_router
 from marketory.confirmation import confirmation_router
 from marketory.db import transaction
 from marketory.errors import DomainError
@@ -236,6 +237,12 @@ def build_router(settings, verify, storage=None):
             "attachments.complete",
             "attachments.detach",
             "attachments.abandon",
+            "communications.generate",
+            "communications.approve",
+            "communications.send",
+            "communications.retry",
+            "communications.revise",
+            "communications.resolve",
         ):
             raise DomainError(422, "UNKNOWN_OPERATION", "지원하지 않는 요청 종류입니다.")
         async with transaction(settings) as conn:
@@ -251,4 +258,5 @@ def build_router(settings, verify, storage=None):
     router.include_router(confirmation_router(settings, identity))
     router.include_router(review_router(settings, identity))
     router.include_router(booth_router(settings, identity))
+    router.include_router(communication_router(settings, identity))
     return router
