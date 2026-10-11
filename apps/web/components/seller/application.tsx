@@ -322,6 +322,27 @@ function ApplicationEditor({
           </div>
         </Notice>
       )}
+      {app.status === "CONFIRMED" && app.booth && (
+        <Notice title={`확정 부스 · ${app.booth.booth_no}`}>
+          <p>구역: {app.booth.zone || "구역 미지정"}</p>
+          <p>
+            테이블{" "}
+            {app.booth.table_capacity === null
+              ? "수용량 미정"
+              : `${app.booth.table_capacity}개`}{" "}
+            · 전기 {app.booth.electricity_available ? "가능" : "불가"} · 화기{" "}
+            {app.booth.fire_allowed ? "허용" : "불가"} · 냉장{" "}
+            {app.booth.cold_storage_available ? "가능" : "불가"} · 차량 접근{" "}
+            {app.booth.vehicle_access ? "가능" : "불가"}
+          </p>
+          <p>배치 확정: {kstDisplay(app.booth.confirmed_at)} (KST)</p>
+        </Notice>
+      )}
+      {app.status === "CONFIRMED" && !app.booth && (
+        <Notice title="부스 배치를 기다리고 있어요.">
+          운영자가 배치를 확정하면 이곳에서 확인할 수 있습니다.
+        </Notice>
+      )}
       {app.status === "NEED_INFO" && (
         <Notice title="요청한 항목만 보완할 수 있어요." tone="warning">
           <p>보완기한 (한국시간): {kstDisplay(app.info_due_at)}</p>

@@ -43,6 +43,17 @@ export type Attachment = {
   size_bytes: number;
 };
 export type Application = {
+  booth?: {
+    booth_id: string;
+    booth_no: string;
+    zone: string | null;
+    electricity_available: boolean;
+    fire_allowed: boolean;
+    cold_storage_available: boolean;
+    vehicle_access: boolean;
+    table_capacity: number | null;
+    confirmed_at: string;
+  } | null;
   confirm_due_at?: string | null;
   confirmed_at?: string | null;
   application_id: string;

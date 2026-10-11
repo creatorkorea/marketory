@@ -371,7 +371,10 @@ def application_router(settings, identity):
             before_event_end(project)
             if app["status"] not in CANCEL_STATES:
                 raise DomainError(409, "INVALID_TRANSITION", "현재 상태에서는 취소할 수 없습니다.")
-            # Future booth/communication workflows must extend this same atomic transaction.
+            from marketory.booth_domain import release_for_cancellation
+
+            await release_for_cancellation(conn, app, actor.user_id, body.reason)
+            # Future communications must invalidate pending approvals in this transaction.
             await conn.execute(
                 "UPDATE public.applications SET status='CANCELLED',cancel_reason=%s,"
                 "version=version+1,updated_at=now() WHERE application_id=%s",

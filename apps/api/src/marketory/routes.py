@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from marketory.applications import application_router
 from marketory.attachments import attachment_router
 from marketory.auth import Identity
+from marketory.booths import booth_router
 from marketory.confirmation import confirmation_router
 from marketory.db import transaction
 from marketory.errors import DomainError
@@ -226,6 +227,11 @@ def build_router(settings, verify, storage=None):
             "reviews.decision",
             "reviews.extend_confirmation",
             "reviews.note",
+            "booths.create",
+            "booths.update",
+            "booths.draft",
+            "booths.confirm",
+            "booths.release",
             "attachments.issue",
             "attachments.complete",
             "attachments.detach",
@@ -244,4 +250,5 @@ def build_router(settings, verify, storage=None):
     router.include_router(attachment_router(settings, identity, storage))
     router.include_router(confirmation_router(settings, identity))
     router.include_router(review_router(settings, identity))
+    router.include_router(booth_router(settings, identity))
     return router

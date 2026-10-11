@@ -61,6 +61,15 @@ async def require_seller(conn, actor, seller_id):
 
 async def authorize_result(conn, actor, row):
     await active_user(conn, actor)
+    if row["resource_type"] == "project" and row["operation"] in (
+        "booths.create",
+        "booths.update",
+        "booths.draft",
+        "booths.confirm",
+        "booths.release",
+    ):
+        await require_project(conn, actor, row["resource_id"], "operate")
+        return
     if row["resource_type"] in (
         "review_application_operator",
         "review_application_reviewer",

@@ -80,13 +80,29 @@ export async function relay(
     (project &&
       segments.length === 3 &&
       request.method === "GET" &&
-      ["settings", "members", "applications", "application-summary"].includes(
-        segments[2],
-      )) ||
+      [
+        "settings",
+        "members",
+        "applications",
+        "application-summary",
+        "booths",
+      ].includes(segments[2])) ||
     (project &&
       segments.length === 3 &&
       request.method === "POST" &&
-      ["status", "members"].includes(segments[2])) ||
+      [
+        "status",
+        "members",
+        "booths",
+        "booth-draft",
+        "booth-confirm",
+        "booth-release",
+      ].includes(segments[2])) ||
+    (project &&
+      segments.length === 4 &&
+      segments[2] === "booths" &&
+      uuid.test(segments[3]) &&
+      request.method === "PATCH") ||
     (request.method === "GET" &&
       (path === "me" ||
         (segments.length === 4 &&
@@ -111,6 +127,11 @@ export async function relay(
             "reviews.decision",
             "reviews.extend_confirmation",
             "reviews.note",
+            "booths.create",
+            "booths.update",
+            "booths.draft",
+            "booths.confirm",
+            "booths.release",
             "attachments.issue",
             "attachments.complete",
             "attachments.detach",

@@ -87,6 +87,49 @@ const policy = {
     "application/pdf",
   ],
 };
+test("seller sees confirmed booth details and pending placement distinctly", async ({
+  page,
+}) => {
+  await fixture(page);
+  let assigned = true;
+  await page.route(`**/api/backend/applications/${aid}`, (route) =>
+    route.fulfill({
+      json: {
+        data: {
+          ...seed,
+          status: "CONFIRMED",
+          allowed_actions: ["cancel"],
+          booth: assigned
+            ? {
+                booth_id: "44444444-4444-4444-8444-444444444444",
+                booth_no: "A01",
+                zone: "중앙",
+                electricity_available: true,
+                fire_allowed: false,
+                cold_storage_available: false,
+                vehicle_access: true,
+                table_capacity: 2,
+                confirmed_at: "2026-10-09T01:00:00Z",
+              }
+            : null,
+        },
+      },
+    }),
+  );
+  await page.goto(`/me/applications/${aid}`);
+  await expect(
+    page.getByText("확정 부스 · A01", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("구역: 중앙", { exact: true })).toBeVisible();
+  assigned = false;
+  await page.reload();
+  await expect(
+    page.getByText("부스 배치를 기다리고 있어요.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("확정 부스 · A01", { exact: true })).toHaveCount(
+    0,
+  );
+});
 async function auth(page: Page) {
   await page.route("**/api/auth/config", (r) =>
     r.fulfill({

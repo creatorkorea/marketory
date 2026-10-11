@@ -12,6 +12,8 @@
 
 [마켓 관리](MARKET-MANAGEMENT.md)와 [셀러 신청·파일](SELLER-APPLICATIONS.md)은 후속 구현, 실제 연결 증거와 남은 운영 범위를 기록합니다.
 
+[운영자 심사](OPERATOR-REVIEW.md)와 [부스 배치](BOOTH-MANAGEMENT.md)는 참가확정 이후 운영 흐름과 권한·동시성·검증 범위를 설명합니다.
+
 | 순서 | 문서 | 읽고 확인할 내용 |
 |---|---|---|
 | 1 | [개발 시작 안내](DEVELOPMENT.md) | 범위·역할·기술 구성·개발 경계 |

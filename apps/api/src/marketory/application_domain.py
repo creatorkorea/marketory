@@ -149,6 +149,14 @@ async def application_data(conn, app, project, seller):
             (app["application_id"],),
         )
         pending_uploads = await cur.fetchall()
+        await cur.execute(
+            "SELECT b.booth_id,b.booth_no,b.zone,b.electricity_available,b.fire_allowed,"
+            "b.cold_storage_available,b.vehicle_access,b.table_capacity,a.confirmed_at "
+            "FROM public.booth_assignments a JOIN public.booths b USING(booth_id) "
+            "WHERE a.application_id=%s AND a.confirmed AND a.released_at IS NULL",
+            (app["application_id"],),
+        )
+        booth = await cur.fetchone()
     actions = []
     try:
         editable_application(app, project, set())
@@ -180,6 +188,7 @@ async def application_data(conn, app, project, seller):
             "project": {k: project.get(k) for k in PUBLIC_PROJECT_FIELDS},
             "attachments": attachments,
             "pending_uploads": pending_uploads,
+            "booth": booth,
             "allowed_actions": actions,
         }
     )

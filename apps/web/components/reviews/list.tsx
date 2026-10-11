@@ -94,6 +94,11 @@ function List({
       <ButtonLink href="/markets" variant="secondary">
         마켓 목록
       </ButtonLink>
+      {data && (
+        <ButtonLink href={`/markets/${id}/booths`} variant="secondary">
+          부스 배치
+        </ButtonLink>
+      )}
       {data && <h2>{data.project.name}</h2>}
       {!summary && (
         <form
