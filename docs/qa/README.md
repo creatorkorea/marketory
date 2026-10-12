@@ -45,3 +45,24 @@ E2E-38–44처럼 트랜잭션·worker·만료·동시성에 관한 시나리오
 - 모바일·키보드·오류 표시와 실제 서버 권한 검사를 각각 확인했는가?
 
 현재 문서 정리의 확인 결과는 [문서 검사 결과](../document-check.json)에 보관합니다. 디자인 확인 결과는 [디자인 검증](../../design-system/verification.json)에 별도로 있습니다.
+
+## 운영 예외 경계 검증 — 2026-10-12
+
+검증 대상은 `341860f` 기반 API와 후속 테스트 보완이다. API 검증은 loopback PostgreSQL에 매 테스트마다 독립 DB를 생성하고 기존 migration을 적용한다. 인증 제공사는 테스트 대역이며 실제 API·권한 검사·트랜잭션·DB 제약을 실행한다. 첨부 권한 테스트의 저장소는 메모리 대역이다. 운영 Supabase 데이터 변경이나 실제 메일 발송을 포함하지 않는다.
+
+| 경계 | 기대 결과 | 테스트 근거 |
+|---|---|---|
+| 정원 1자리 동시 선정 | 1건 성공, 나머지 CAPACITY_FULL; 안내 초안 1건 | `test_reviews.py::test_decision_capacity_serializes_competing_approvals` |
+| 선정 취소 후 대기 승격 | 취소로 1자리 회수; 과거 실패 요청은 실패를 재생하며 새 요청으로만 승격 | `test_operation_boundaries.py::test_cancelled_selection_frees_one_slot_without_replaying_failed_approval` |
+| 확정·취소 동시 요청 | 동일 버전 요청 중 1건 성공, 나머지 충돌 | `test_confirmation.py::test_owner_confirm_replay_and_cancel_race` |
+| 취소와 부스 확정 경합 | 최신 버전으로 취소 완료 후 활성 확정/초안 배정 모두 없음 | `test_booth_cancellation.py::test_cancel_and_saved_draft_confirm_race` |
+| 참가 취소의 부스 회수 | 확정 배정과 초안을 한 트랜잭션에서 회수, 동일 요청 재실행에도 중복 효과 없음 | `test_booth_cancellation.py::test_owner_booth_projection_and_atomic_cancellation` |
+| 타 셀러 신청·첨부 접근 | 조회·수정·취소·확정·파일 조회 404, 원본 상태·버전·상품명과 감사 로그 불변 | `test_operation_boundaries.py::test_other_seller_cannot_read_change_or_download_an_application` |
+| 권한 강등·회수 | 저장 결과 재조회도 현재 권한으로 검사; UI의 이전 상세 정보 제거 | `test_confirmation.py::test_confirmation_deadline_and_staff_evidence`, `reviews.spec.ts` |
+| 타 마켓 부스·중복 배치·행사 종료 | 교차 배정·중복 배정·종료 후 변경 거절 | `test_booths.py::test_conditions_unconfirmed_cross_project_duplicates_and_event_end` |
+
+재현은 `apps/api`에서 로컬 전용 `MARKETORY_TEST_DATABASE_URL`을 지정하고 `.venv/Scripts/python.exe -m pytest -q`로 실행한다. 운영 DB URL을 테스트 환경변수에 넣지 않는다. 추가 2개 테스트의 JUnit 결과는 `output/operation-boundaries-20261012.xml`에 저장한다. 심사·배치 화면 검증 명령은 저장소 루트의 `npm.cmd run test:browser --workspace @marketory/web -- tests/browser/reviews.spec.ts tests/browser/booths.spec.ts --reporter=list`이며 브라우저 API는 fixture다.
+
+실행 결과: 기존 전체 API 테스트 110개 PASS(384.91초), 추가 경계 테스트 2개 PASS(13.86초), 심사·부스 브라우저 테스트 18개 PASS(1.1분). 추가 테스트 파일의 Ruff 검사·포맷 검사와 문서 무결성 검사도 통과했다. 제품 코드·DB migration 변경은 없으며 테스트와 문서만 보완했다.
+
+이 기록은 공개 배포에서 실제 다중 사용자 동시 접속을 재현했다는 뜻이 아니다. 공개 테스트 마켓의 기존 확정·부스·첨부 기록은 유지한다.
