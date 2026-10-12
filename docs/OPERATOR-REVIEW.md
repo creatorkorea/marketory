@@ -46,3 +46,7 @@ API: `reviews.py`, `review_domain.py`, `confirmation.py`. 화면: `components/re
 - 독립 코드 검토에서 발견한 409 후 입력 보존과 권한 회수 404 처리를 수정하고 회귀 사례를 추가했다.
 - Supabase 프로젝트 `xtuznofafxlwlggnolns`에 이번 마이그레이션 하나만 적용했다. 적용 이력·감사 인덱스·역할별 만료 규칙을 재조회했다. public 테이블 RLS 미설정 0개, anon/authenticated 테이블 권한 0개, 내부 함수는 security invoker임을 확인했다.
 - 검증 증빙은 gitignored `output/operator-review-browser-full.json`, `output/review-ui-premium-audit.json` 및 화면 캡처에 저장했다. 운영 데이터로 심사·확정하거나 메일을 발송하지 않았다.
+
+## 2026-10-12 공개 배포 검증
+
+사용자가 승인한 합성 테스트 신청으로 관리자 검토·선정 → 셀러 참가확정 → 부스 등록·초안·확정을 실제 배포 브라우저에서 검증했다. 셀러 새로고침 후 부스 표시와 내부 메모 비노출, DB 이력을 확인했다. [배포 검증 기록](DEPLOYMENT.md)에 정확한 범위와 후속 항목을 기록했다. 실제 행사 운영 완료를 뜻하지 않는다.
