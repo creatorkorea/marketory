@@ -8,7 +8,9 @@ API는 Render Free Web Service로 준비한다. Background Worker에는 무료 �
 
 Free Web Service는 15분간 요청이 없으면 중지되고 다음 요청 시 기동 지연이 있다. Shell과 one-off job도 지원하지 않는다. 무료 시간·빌드·대역폭 한도가 있으며 결제 수단이 연결된 경우 초과 사용 과금 설정을 확인해야 한다. 비용 0원 제약에 맞게 유료 리소스와 초과 결제를 활성화하지 않는다. [Render 공식 무료 범위](https://render.com/docs/free), [Docker 설정](https://render.com/docs/docker).
 
-현재 연결 도구의 Vercel 팀은 `solverlabkr's projects`이며 MARKETORY 프로젝트는 조회되지 않았다. 사용자가 지정한 creatorkorea 배포 계정과 일치한다고 가정하지 않는다. Chrome의 Vercel·Render 로그인 화면을 열었으며 대상 계정 로그인과 Render 워크스페이스 확인이 필요하다.
+연결 도구는 다른 Vercel 팀(`solverlabkr's projects`)을 가리키므로 배포에는 사용하지 않는다. 사용자 로그인 후 Chrome에서 `creatorkoreaorg-7032's projects` Hobby 팀을 확인하고 `marketory` 프로젝트를 생성했다. Next.js·Root Directory `apps/web`이며 아직 Production Deployment는 없다. 프로젝트 주소는 https://vercel.com/creatorkoreaorg-7032s-projects/marketory 이다.
+
+Render 로그인 계정은 `creatorkorea.org@gmail.com`, 워크스페이스는 `영준's workspace`다. 서비스 생성 폼에 `marketory-api`, 공개 Git 저장소, `codex/communications`, Docker, Singapore, Free를 입력했다. Root Directory `apps/api`, 그 하위 Dockerfile `./Dockerfile`, context `.`, health `/health/ready`, 자동 배포 Off로 준비했으며 아직 Deploy를 실행하지 않았다. DB 연결 문자열과 Supabase 서버 키를 이 Render 서버에 저장하는 확인을 요청한 상태다. 폼 입력은 생성된 서비스와 구분한다.
 
 ### 배포 입력값과 검증 순서
 
