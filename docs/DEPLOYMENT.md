@@ -107,3 +107,13 @@ DB 재조회: 신청 CONFIRMED, version 8, 제출 revision 3 유지, 활성 확�
 운영자/셀러 접근 화면에서 계정 조회가 오래 걸리면 8초 후 지연 안내를 표시한다. 일시적 네트워크 오류·timeout·502/503/504는 2초/4초 대기 후 최대 2회 추가 조회하며 실패가 지속되면 수동 다시 확인을 제공한다. 로그인/권한 거절은 재시도하지 않는다. 저장·신청·발송 등 변경 요청에는 이 조회 재시도를 적용하지 않는다. 사용자·화면 변경 시 AbortSignal로 대기와 결과 반영을 중단한다. 공통 소유자와 동작 기준은 [UI 계약](../UX-CONTRACT.md)에 기록했다.
 
 검증: 추가 조회 복구 단위 8개를 포함한 웹 단위 71개, 운영/셀러 브라우저 17개와 Next.js 프로덕션 빌드 통과. 브라우저는 지연·503·403을 fixture로 주입해 안내, 최대 3회 조회, 수동 재조회, 변경 요청 0건을 확인한다. `output/access-slow-desktop.png`에서 기존 Notice/타이포그래피와 레이아웃을 확인했다. 실제 Render cold start 시간 단축을 의미하지 않으며 서버 기동 원인을 추정하지 않는다.
+
+## 모바일 회귀 검증 — 2026-10-12
+
+`npm.cmd run test:browser --workspace @marketory/web -- --config playwright.mobile-check.config.ts`로 로그인·셀러 기존 시나리오 20개를 실행해 모두 통과했다. 기본 390×844, touch/mobile 모드를 사용하며 일부 기존 반응형 테스트는 자체적으로 360px·데스크톱·텍스트 확대 조건으로 전환한다. OTP 검증·세션 복구, 신청 자동 저장·중복 제출 방지, 파일 2개 순차 연결, 충돌 복구, 참가확정·기한 만료 처리를 포함한다. API·파일 전송은 로컬 fixture이므로 실제 모바일 기기나 운영 저장소 업로드 성공 증거와 구분한다.
+
+공개 사이트의 기존 합성 신청을 Chrome 390×844·360×800에서 확인했다. 참가 확정·TEST-A01 배치·신청 상세가 가로 넘침 없이 표시되며 관리자 내부 메모는 보이지 않았다. 파일 확인 버튼으로 기존 private 첨부 이미지(32×32)가 로딩되는 것을 확인했다. 새 신청·취소·재확정 등 운영 데이터 변경은 실행하지 않았다. 최초 계정 조회 실패는 기존 수동 다시 확인으로 복구했다.
+
+증거: `output/mobile-browser-20261012.json`, `output/deployed-seller-mobile-20261012.png`, `output/seller-application-mobile.png`, `output/auth-mobile.png`. 재실행 설정은 `apps/web/playwright.mobile-check.config.ts`다. 실제 iOS Safari·Android 파일 선택기/키보드 검증은 별도로 남는다.
+
+초기 접속 개선 커밋 `6969ba8`의 첫 Vercel 배포 2건은 빌드 전 Git 정보 조회에서 실패했다. Git 설정 화면에서 GitHub secondary rate limit(403)을 확인했으며 대기 후 저장소 연결이 정상으로 복구됐다. 코드 테스트 통과와 공개 배포 성공은 구분하며 후속 배포 Ready 및 공개 응답 확인이 필요하다.
