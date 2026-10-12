@@ -270,7 +270,7 @@ test("version conflict retains inputs and uses reviewed latest version", async (
     .getByRole("button", { name: "최신 상태 확인", exact: true })
     .click();
   await expect(
-    page.getByText("다른 운영자가 수정한 제목", { exact: true }),
+    page.getByRole("region", { name: "안내 내용과 처리 이력" }).getByText("다른 운영자가 수정한 제목", { exact: true }),
   ).toBeVisible();
   await expect(page.getByLabel("제목", { exact: true })).toHaveValue(
     "내가 작성한 제목",
@@ -282,6 +282,28 @@ test("version conflict retains inputs and uses reviewed latest version", async (
   await expect.poll(() => requests.length).toBe(2);
   expect(requests[1].body.expected_version).toBe(2);
   expect(requests[1].body.subject).toBe("내가 작성한 제목");
+});
+test("latest delivery status updates the list while preserving unsaved input", async ({ page }) => {
+  const requests = await setup(page);
+  await openDetail(page);
+  await page.getByLabel("제목", { exact: true }).fill("작성 중인 제목");
+  await page.getByLabel("본문", { exact: true }).fill("작성 중인 본문");
+  await page.route(`**/api/backend/communications/${cid}`, (route) =>
+    route.fulfill({ json: { data: {
+      ...seed, version: 3, send_status: "SENT", allowed_actions: ["revise"],
+      approved_version: 1, sent_at: seed.created_at,
+    } } }),
+  );
+  await page.getByRole("button", { name: "최신 상태 확인", exact: true }).click();
+  await expect(page.getByRole("region", { name: "안내 목록", exact: true }))
+    .toContainText("제공사 접수 완료");
+  await expect(page.getByLabel("제목", { exact: true })).toHaveValue("작성 중인 제목");
+  await expect(page.getByLabel("본문", { exact: true })).toHaveValue("작성 중인 본문");
+  await page.getByRole("button", { name: "내 입력을 유지하고 최신 기준으로 검토" }).click();
+  await expect(page.getByRole("region", { name: "안내 내용과 처리 이력" }))
+    .toContainText("제공사 접수 완료");
+  await expect(page.getByLabel("제목", { exact: true })).toHaveValue("작성 중인 제목");
+  expect(requests).toHaveLength(0);
 });
 test("UNKNOWN requires evidence and never offers retry", async ({ page }) => {
   const requests = await setup(page, { unknown: true });

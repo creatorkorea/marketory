@@ -154,6 +154,13 @@ function Board({
       if (controller.signal.aborted) return;
       if (response.status === 200) {
         const data = response.body.data as Message;
+        setList((current) => current && {
+          ...current,
+          items: current.items.map((item) =>
+            item.communication_id === data.communication_id &&
+            item.version <= data.version ? data : item,
+          ),
+        });
         if (compare) setLatest(data);
         else accept(data);
       } else {
