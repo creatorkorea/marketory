@@ -2,6 +2,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAuthClient } from "@/lib/auth/client";
+import { readAccess } from "@/lib/api/access-read";
+import { AccessLoading } from "@/components/auth/access-loading";
 import { api } from "@/lib/api/client";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
@@ -18,7 +20,8 @@ export function MarketAccess({
 }) {
   const [session, setSession] = useState<MarketSession | null>(null),
     [state, setState] = useState("loading"),
-    [retry, setRetry] = useState(0);
+    [retry, setRetry] = useState(0),
+    [retrying, setRetrying] = useState(false);
   useEffect(() => {
     let alive = true;
     let unsubscribe: (() => void) | undefined;
@@ -26,6 +29,7 @@ export function MarketAccess({
     let current: string | null = null;
     setSession(null);
     setState("loading");
+    setRetrying(false);
     void getAuthClient()
       .then(async (client) => {
         if (!alive) return;
@@ -41,9 +45,13 @@ export function MarketAccess({
           const signal = active.signal;
           setSession(null);
           setState(id ? "loading" : "login");
+          setRetrying(false);
           if (!id) return;
           try {
-            const r = await api(client, id, "me", signal);
+            const r = await readAccess(
+              () => api(client, id, "me", signal), signal,
+              () => { if (alive && !signal.aborted) setRetrying(true); },
+            );
             if (!alive || signal.aborted) return;
             const p = r.body.data as
               | {
@@ -95,7 +103,9 @@ export function MarketAccess({
   if (session) return <div key={session.actor}>{children(session)}</div>;
   return (
     <section className="market-placeholder">
-      <Notice
+      {state === "loading" ? (
+        <AccessLoading key={retry} title="운영 권한을 확인하고 있어요." retrying={retrying} />
+      ) : <Notice
         title={
           {
             loading: "운영 권한을 확인하고 있어요.",
@@ -108,9 +118,9 @@ export function MarketAccess({
         {state === "forbidden"
           ? "관리자가 이 계정에 마켓 역할을 배정한 뒤 이용할 수 있습니다."
           : state === "error"
-            ? "연결 상태를 확인한 뒤 다시 시도해 주세요."
+            ? "연결이 지연되거나 일시적으로 끊겼어요. 잠시 후 다시 확인해 주세요."
             : "계정과 배정된 마켓을 확인합니다."}
-      </Notice>
+      </Notice>}
       <div className="actions">
         {state === "error" && (
           <Button onClick={() => setRetry((v) => v + 1)}>다시 확인</Button>

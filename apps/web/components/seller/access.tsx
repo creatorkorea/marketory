@@ -2,6 +2,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAuthClient } from "@/lib/auth/client";
+import { readAccess } from "@/lib/api/access-read";
+import { AccessLoading } from "@/components/auth/access-loading";
 import { api } from "@/lib/api/client";
 import { Notice } from "@/components/ui/notice";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -13,7 +15,8 @@ export function SellerAccess({
 }) {
   const [session, setSession] = useState<SellerSession | null>(null),
     [state, setState] = useState("loading"),
-    [retry, setRetry] = useState(0);
+    [retry, setRetry] = useState(0),
+    [retrying, setRetrying] = useState(false);
   useEffect(() => {
     let alive = true,
       current: string | null = null,
@@ -21,6 +24,7 @@ export function SellerAccess({
     let controller = new AbortController();
     setSession(null);
     setState("loading");
+    setRetrying(false);
     void getAuthClient()
       .then(async (client) => {
         if (!alive) return;
@@ -36,9 +40,13 @@ export function SellerAccess({
           const signal = controller.signal;
           setSession(null);
           setState(id ? "loading" : "login");
+          setRetrying(false);
           if (!id) return;
           try {
-            const r = await api(client, id, "me", signal);
+            const r = await readAccess(
+              () => api(client, id, "me", signal), signal,
+              () => { if (alive && !signal.aborted) setRetrying(true); },
+            );
             if (!alive || signal.aborted) return;
             const data = r.body.data as
               { account_role?: string; user_id?: string } | undefined;
@@ -80,7 +88,9 @@ export function SellerAccess({
   if (session) return <div key={session.actor}>{children(session)}</div>;
   return (
     <section className="market-placeholder">
-      <Notice
+      {state === "loading" ? (
+        <AccessLoading key={retry} title="셀러 계정을 확인하고 있어요." retrying={retrying} />
+      ) : <Notice
         title={
           state === "loading"
             ? "셀러 계정을 확인하고 있어요."
@@ -93,8 +103,10 @@ export function SellerAccess({
       >
         {state === "login"
           ? "내 계정에서 이메일 인증을 완료한 뒤 이 마켓 링크로 돌아와 주세요."
-          : "계정과 이용 권한을 확인합니다."}
-      </Notice>
+          : state === "error"
+            ? "연결이 지연되거나 일시적으로 끊겼어요. 잠시 후 다시 확인해 주세요."
+            : "계정과 이용 권한을 확인합니다."}
+      </Notice>}
       <div className="actions">
         {state === "error" && (
           <Button onClick={() => setRetry((v) => v + 1)}>다시 확인</Button>

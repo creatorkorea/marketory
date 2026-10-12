@@ -295,3 +295,49 @@ test("reviewer and unassigned staff cannot open creation form", async ({
     0,
   );
 });
+
+for (const role of ["STAFF", "SELLER"]) {
+  test(`initial ${role} access retries temporary failures and supports manual recovery`, async ({ page }) => {
+    await setup(page);
+    let reads = 0, writes = 0;
+    await page.route("**/api/backend/**", async route => {
+      if (route.request().method() !== "GET") writes++;
+      if (new URL(route.request().url()).pathname.endsWith("/me")) {
+        reads++;
+        if (reads <= 3) return route.fulfill({ status: 503, json: { code: "UNAVAILABLE" } });
+        return route.fulfill({ json: { data: { user_id: actor, account_role: role, global_role: role === "STAFF" ? "PLATFORM_ADMIN" : "USER" } } });
+      }
+      return route.fulfill({ json: { data: { items: [], total: 0 } } });
+    });
+    await page.goto(role === "STAFF" ? "/markets" : "/me/applications");
+    await expect(page.getByText("연결을 다시 확인하고 있어요.")).toBeVisible();
+    await expect(page.getByRole("button", { name: "다시 확인", exact: true })).toBeVisible({ timeout: 12000 });
+    expect(reads).toBe(3);
+    await page.getByRole("button", { name: "다시 확인", exact: true }).click();
+    await expect(page.getByText(role === "STAFF" ? "운영 정보를 불러오지 못했어요." : "셀러 정보를 불러오지 못했어요.")).toHaveCount(0);
+    await expect.poll(() => reads).toBe(4);
+    expect(writes).toBe(0);
+  });
+}
+
+test("slow initial access explains waiting without restarting the request", async ({ page }) => {
+  await setup(page);
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  let reads = 0;
+  await page.route("**/api/backend/**", async route => {
+    if (new URL(route.request().url()).pathname.endsWith("/me")) {
+      reads++;
+      await gate;
+      return route.fulfill({ status: 403, json: { code: "FORBIDDEN" } });
+    }
+    return route.fulfill({ json: { data: { items: [], total: 0 } } });
+  });
+  await page.goto("/markets");
+  await expect(page.getByText(/연결에 시간이 걸리고 있어요/)).toBeVisible({ timeout: 12000 });
+  expect(reads).toBe(1);
+  await page.screenshot({ path: "../../output/access-slow-desktop.png", fullPage: true });
+  release();
+  await expect(page.getByText("마켓 운영 권한이 필요해요.")).toBeVisible();
+  expect(reads).toBe(1);
+});
