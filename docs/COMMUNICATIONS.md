@@ -44,6 +44,15 @@ UNKNOWN은 운영자가 제공사 기록 등 실제 근거를 확인하고 시�
 
 실제 Supabase 프로젝트 `xtuznofafxlwlggnolns`에 `20261011134640_communications.sql` 한 건을 CLI dry-run 후 적용했다. migration 이력, 신규 테이블 3개 RLS 활성, anon/authenticated/PUBLIC 직접 접근 grant 0개를 확인했다. 적용 후 security advisors의 warn 이상 결과는 0개다. 기존 고객 데이터 생성·변경이나 발송 활성화는 수행하지 않았다.
 
-웹 단위 63개·브라우저 fixture 50개(신규 메일 화면 8개)와 프로덕션 빌드가 통과했다. 데스크톱·모바일 캡처에서 입력 폼·동작 버튼·가로 넘침을 확인했다. 브라우저는 인증/API를 대체한 fixture이며 실제 Resend 인증·지정 수신함 도착·운영 배포 검증은 남아 있다. 마지막 UNKNOWN 선택 초기화 보완 후 재빌드와 메일 브라우저 9개를 다시 통과했다. 증빙은 gitignored `output/communications-browser.json`(전체 50개), `output/communications-browser-final.json`(최종 메일 9개), `output/communications-desktop.png`, `output/communications-mobile.png`다.
+웹 단위 63개·브라우저 fixture 50개(신규 메일 화면 8개)와 프로덕션 빌드가 통과했다. 데스크톱·모바일 캡처에서 입력 폼·동작 버튼·가로 넘침을 확인했다. 브라우저는 인증/API를 대체한 fixture다. 이후 실제 Resend 접수 검증은 아래 기록을 따르며, 운영 배포 검증은 남아 있다. 마지막 UNKNOWN 선택 초기화 보완 후 재빌드와 메일 브라우저 9개를 다시 통과했다. 증빙은 gitignored `output/communications-browser.json`(전체 50개), `output/communications-browser-final.json`(최종 메일 9개), `output/communications-desktop.png`, `output/communications-mobile.png`다.
 
 화면 경로는 `/markets/{project_id}/communications`이며 목록 안에서 상세를 연다. 요청 복구 범위를 유지하기 위해 별도 메시지 상세 URL은 만들지 않았다. 개별 메시지 링크 공유는 후속이다.
+
+
+## 실제 Resend 연결 확인 — 2026-10-12
+
+사용자가 지정했던 테스트 수신함으로 `[마켓토리] 운영 안내 메일 연결 테스트` 한 건을 기존 `ResendProvider`에서 발송했다. 실제 Resend가 정상 접수했고 provider message ID는 `01a12eba-897d-7c2c-9a62-5f2422f87512`다. 키 인증과 기본 발신 주소를 사용한 발송 요청의 수락을 확인했다. 수신함 도착·스팸 분류 여부는 사용자 확인 대기다.
+
+이번 검증은 제공사 연결 단독 검사다. 운영 화면에서 실제 신청자를 승인하고 worker가 보내는 전체 실서비스 E2E를 완료한 것은 아니다. 실제 신청·메일 큐 데이터는 생성하지 않았고 worker도 실행하지 않았다. `MARKETORY_EMAIL_DELIVERY_ENABLED=false`를 유지했다. 발송 전 고정 요청 키를 로컬 증빙에 저장했고 같은 파일이 있으면 재발송하지 않도록 했다. 비밀 키는 출력하거나 Git에 저장하지 않았다.
+
+로컬 증빙: gitignored `output/resend-live-smoke-20261012.json`. 수신 주소·본문·요청 키·제공사 접수 결과를 포함한다.
