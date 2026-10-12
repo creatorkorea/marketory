@@ -10,7 +10,7 @@
 - [x] 토큰·Pretendard·앱 기본 프레임 연결. 레스터 UI 시안을 그대로 버튼으로 사용하지 않음.
 - [x] 로컬 health 확인·타입 검사·최소 테스트가 실행되는 절차 기록.
 
-기록: [로컬 개발 안내](LOCAL-DEVELOPMENT.md), [P0 검증](P0-VERIFICATION.md). Docker build·외부 서비스 연결은 미검증이며 worker 업무 handler는 후속 단계입니다.
+기록: [로컬 개발 안내](LOCAL-DEVELOPMENT.md), [P0 검증](P0-VERIFICATION.md). 당시의 로컬 검증 범위이며, 이후 Render Docker 빌드·웹/API 연결은 [배포 구성](DEPLOYMENT.md), worker 업무 handler와 단회 검증은 [운영 안내](COMMUNICATIONS.md)에 기록했습니다.
 
 완료 증거: 재현 가능한 로컬 시작 절차, 버전 고정, health 응답, 타입 검사 로그. 외부 production 프로젝트 생성은 별도 운영 작업입니다.
 

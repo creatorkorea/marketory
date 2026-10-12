@@ -1,6 +1,6 @@
 # 개발 및 운영 전 결정 목록
 
-**Vercel(웹) + Render(API) + Supabase(DB·인증·파일)** 구성이며, 2026-10-12 사용자가 creatorkorea 계정과 Render 무료 범위를 지정했습니다. 무료 인스턴스가 없는 Render Background Worker 배포는 보류합니다. [배포 구성](DEPLOYMENT.md)에 결정 범위를 기록했습니다. Supabase·OTP·Storage·Resend의 로컬 연결은 검증했고, Vercel·Render 배포 계정 로그인과 실제 배포는 남아 있습니다. 그 외 아래 항목은 미확정 또는 미검증입니다. 문서의 시안 예시는 실운영값 승인 근거가 아닙니다.
+**Vercel(웹) + Render(API) + Supabase(DB·인증·파일)** 구성이며, 2026-10-12 사용자가 creatorkorea 계정과 Render 무료 범위를 지정했습니다. 무료 인스턴스가 없는 Render Background Worker 배포는 보류합니다. [배포 구성](DEPLOYMENT.md)에 결정 범위를 기록했습니다. Supabase·OTP·Storage·Resend의 로컬 연결은 검증했고, Vercel 웹·Render 무료 API 배포와 웹→API→DB health, 비로그인 차단은 검증했습니다. 공개 환경 실제 로그인 이후 전체 업무 E2E는 남아 있습니다. 그 외 아래 항목은 미확정 또는 미검증입니다. 문서의 시안 예시는 실운영값 승인 근거가 아닙니다.
 
 ## 개발 중 결정할 사항
 
@@ -9,7 +9,7 @@
 | D01 | Node 24.13.1/npm 11.8.0, Python 3.12.10/uv 0.10.4 고정 완료 | 개발 | P0 완료 | 버전 파일·잠금파일·LOCAL-DEVELOPMENT |
 | D02 | SQL migration·멱등·복구 로컬 검증 및 실제 Supabase 적용 | 개발 | 배포 환경 연결 검증 남음 | [안내 구현·실제 DB 검증](COMMUNICATIONS.md), 전체 배포 E2E는 별도 |
 | D03 | 메일 worker claim·회수·늦은 결과 차단 구현 및 단회 실제 접수 검증 | 개발 | 무료 조건으로 상시 배포 보류 | [worker 검증](COMMUNICATIONS.md), 호스팅 환경 검증 남음 |
-| D04 | creatorkorea 계정·Render 무료 결정, 리전·환경별 연결 미완료 | 개발·운영 | preview 배포 전 | 로그인·서비스 연결·무료 사용 한도·환경별 경계 검증 |
+| D04 | creatorkorea 계정·Render Singapore Free 배포 및 기본 연결 완료 | 개발·운영 | 공개 전 격리·기동 복구 확인 | [실제 배포 증거](DEPLOYMENT.md), 무료 한도·환경별 경계 후속 검증 |
 | D05 | AI 제공사·모델·timeout·비용/호출 제한 | 개발·운영 | 실제 AI 연결 전 | 설정·출력 스키마·실패 검증 |
 | D06 | 업로드 MIME·최대 크기·개수 | 운영·개발 | 공개 신청 전 | 프로젝트 정책과 서버/화면 일치 |
 | D07 | 검색·업로드·300건 운영 성능 목표 | 운영·개발 | 부하 검증 전 | 수치화한 목표·측정 결과 |
