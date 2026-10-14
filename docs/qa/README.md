@@ -66,3 +66,9 @@ E2E-38–44처럼 트랜잭션·worker·만료·동시성에 관한 시나리오
 실행 결과: 기존 전체 API 테스트 110개 PASS(384.91초), 추가 경계 테스트 2개 PASS(13.86초), 심사·부스 브라우저 테스트 18개 PASS(1.1분). 추가 테스트 파일의 Ruff 검사·포맷 검사와 문서 무결성 검사도 통과했다. 제품 코드·DB migration 변경은 없으며 테스트와 문서만 보완했다.
 
 이 기록은 공개 배포에서 실제 다중 사용자 동시 접속을 재현했다는 뜻이 아니다. 공개 테스트 마켓의 기존 확정·부스·첨부 기록은 유지한다.
+
+## 지정 메일 실행 릴리스 점검 — 2026-10-14
+
+`test_worker_cli.py`, `test_communication_worker.py`, `test_email_provider.py`, `test_foundation.py`, `test_communications.py`를 로컬 격리 PostgreSQL에서 함께 실행했다. **53개 통과(106.15초)**. 지정 대상 외 큐 불변, 이미 처리된 ID/없는 ID의 다른 메일 선택 차단, 지정/일반 실행의 동시 claim 중복 방지, CLI 인자·비활성 차단, 기존 승인·요청·결과 확인 API를 포함한다. 외부 메일 제공사는 테스트 대역이다. JUnit은 Git 제외 `output/mail-release-20261014.xml`에 저장했다. 변경 Python 파일 Ruff·포맷 검사와 diff 검사를 통과했다.
+
+별도 실제 연결 점검에서는 기존 테스트 메시지 `9eb9b0ff-b78d-491b-b71c-7d6d9513a557`에 대해 `MARKETORY_EMAIL_DELIVERY_ENABLED=false`를 해당 프로세스에 명시하고 `--once --communication-id`를 실행했다. `worker_target delivery_disabled`, 종료 코드 2를 확인했으며, 전후 communications/communication_attempts/audit_logs 전체 행 해시와 건수가 동일했다. 실제 발송·복구·설정 변경은 없었다. 증거는 Git 제외 `output/disabled-target-20261014.json`이다. 이는 비활성 차단 검증이며 활성화된 지정 발송의 실제 수신 증거는 아니다.

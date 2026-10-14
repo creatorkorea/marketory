@@ -1,7 +1,7 @@
 """Bounded queue claims with network calls outside transactions and fenced completion."""
 
 import asyncio
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from psycopg.types.json import Jsonb
 
@@ -59,13 +59,15 @@ async def _reject(conn, message, reason):
     await _audit(conn, message, "FAILED", reason)
 
 
-async def _claim(settings):
+async def _claim(settings, communication_id: UUID | None = None):
     async with transaction(settings) as conn:
         candidates = await rows(
             conn,
             "SELECT communication_id,project_id,application_id,queued_by "
             "FROM public.communications WHERE send_status='QUEUED' "
+            "AND (%s::uuid IS NULL OR communication_id=%s::uuid) "
             "ORDER BY queued_at,communication_id LIMIT 20",
+            (communication_id, communication_id),
         )
     for ref in candidates:
         async with transaction(settings) as conn:
@@ -160,11 +162,11 @@ async def _complete(settings, message, attempt_id, result):
         return True
 
 
-async def process_one(settings, provider=None) -> bool:
+async def process_one(settings, provider=None, *, communication_id: UUID | None = None) -> bool:
     key = settings.resend_api_key
     if not settings.email_delivery_enabled or not key or not key.get_secret_value().strip():
         return False
-    handled, claim = await _claim(settings)
+    handled, claim = await _claim(settings, communication_id)
     if claim is None:
         return handled
     message, attempt_id = claim

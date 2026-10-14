@@ -5,6 +5,7 @@ import asyncio
 import logging
 import signal
 from collections.abc import Awaitable, Callable
+from uuid import UUID
 
 from marketory.communication_worker import process_one, recover_stale
 from marketory.config import Settings
@@ -42,12 +43,17 @@ async def run_worker(
     logger.info("worker_stopped")
 
 
-async def main(once: bool) -> int:
+async def main(once: bool, communication_id: UUID | None = None) -> int:
+    if communication_id is not None and not once:
+        raise ValueError("Targeted delivery requires once mode")
     settings = Settings()
 
     async def dispatch():
+        if communication_id is not None:
+            # A targeted send must never mutate unrelated stale claims.
+            return await process_one(settings, communication_id=communication_id)
         await recover_stale(settings)
-        await process_one(settings)
+        return await process_one(settings)
 
     if once:
         try:
@@ -60,10 +66,16 @@ async def main(once: bool) -> int:
         )
         if healthy and settings.email_delivery_enabled:
             try:
-                await dispatch()
+                handled = await dispatch()
+                if communication_id is not None:
+                    logger.info("worker_target handled=%s", handled)
+                    return 0 if handled else 2
             except Exception:
                 logger.warning("worker_handler failed")
                 return 1
+        if healthy and communication_id is not None:
+            logger.info("worker_target delivery_disabled")
+            return 2
         return 0 if healthy else 1
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
@@ -78,13 +90,25 @@ async def main(once: bool) -> int:
     return 0
 
 
-if __name__ == "__main__":
+def parse_args(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--once",
         action="store_true",
         help="Probe database; when delivery is enabled, recover stale claims and process one item",
     )
-    args = parser.parse_args()
+    parser.add_argument(
+        "--communication-id",
+        type=UUID,
+        help="With --once, process only this queued message; do not recover stale claims",
+    )
+    args = parser.parse_args(argv)
+    if args.communication_id is not None and not args.once:
+        parser.error("--communication-id requires --once")
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    raise SystemExit(run_async(main(args.once)))
+    raise SystemExit(run_async(main(args.once, args.communication_id)))

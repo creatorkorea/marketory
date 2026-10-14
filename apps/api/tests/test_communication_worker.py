@@ -1,18 +1,18 @@
 # ruff: noqa: F811
 import asyncio
+from uuid import UUID, uuid4
 
 import psycopg
 import pytest
+from marketory.communication_worker import process_one, recover_stale
+from marketory.config import Settings
+from marketory.email_provider import DeliveryResult
+from marketory.runtime import run_async
 from psycopg.rows import dict_row
 from pydantic import SecretStr
 from test_communications import action, client_for, data, queued
 from test_p1_p3 import isolated_db  # noqa: F401
 from test_reviews import fixture
-
-from marketory.communication_worker import process_one, recover_stale
-from marketory.config import Settings
-from marketory.email_provider import DeliveryResult
-from marketory.runtime import run_async
 
 
 def settings(dsn, **kwargs):
@@ -56,6 +56,22 @@ def setup_queue(dsn):
     return op, pid, aid, msg
 
 
+def test_targeted_delivery_never_falls_back_to_other_queue(isolated_db):
+    _, _, _, first = setup_queue(isolated_db)
+    _, _, _, target = setup_queue(isolated_db)
+    first_before = snapshot(isolated_db, first["communication_id"])
+    fake = FakeProvider()
+    cid = UUID(target["communication_id"])
+    assert run_async(process_one(settings(isolated_db), fake, communication_id=cid))
+    assert [str(m["communication_id"]) for m in fake.calls] == [str(cid)]
+    assert snapshot(isolated_db, first["communication_id"]) == first_before
+    assert snapshot(isolated_db, cid)[0]["send_status"] == "SENT"
+    assert not run_async(process_one(settings(isolated_db), fake, communication_id=cid))
+    assert not run_async(process_one(settings(isolated_db), fake, communication_id=uuid4()))
+    assert len(fake.calls) == 1
+    assert snapshot(isolated_db, first["communication_id"]) == first_before
+
+
 def test_disabled_or_missing_key_never_claims(isolated_db):
     _, _, _, msg = setup_queue(isolated_db)
     fake = FakeProvider()
@@ -70,7 +86,8 @@ def test_disabled_or_missing_key_never_claims(isolated_db):
     assert current["send_status"] == "QUEUED" and attempts == [] and fake.calls == []
 
 
-def test_concurrent_claim_single_attempt_network_outside_transaction(isolated_db):
+@pytest.mark.parametrize("targeted", [False, True])
+def test_concurrent_claim_single_attempt_network_outside_transaction(isolated_db, targeted):
     _, _, _, msg = setup_queue(isolated_db)
 
     class WaitingProvider(FakeProvider):
@@ -91,11 +108,13 @@ def test_concurrent_claim_single_attempt_network_outside_transaction(isolated_db
             return self.result
 
     fake = WaitingProvider()
+    target = UUID(msg["communication_id"]) if targeted else None
 
     async def race():
         return await asyncio.wait_for(
             asyncio.gather(
-                process_one(settings(isolated_db), fake), process_one(settings(isolated_db), fake)
+                process_one(settings(isolated_db), fake, communication_id=target),
+                process_one(settings(isolated_db), fake, communication_id=target),
             ),
             timeout=5,
         )
