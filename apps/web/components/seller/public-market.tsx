@@ -42,6 +42,7 @@ export function PublicMarket({ id }: { id: string }) {
   if (!project) return <Notice title="마켓 정보를 불러오고 있어요." />;
   return (
     <article className="seller-public">
+      <div className="public-market-back"><ButtonLink variant="secondary" href="/#recruiting">모집 마켓 목록으로</ButtonLink></div>
       <p className="eyebrow">마켓토리 · 셀러 모집</p>
       <h1>{project.name}</h1>
       <p className="intro">함께할 상품과 이야기를 기다립니다.</p>

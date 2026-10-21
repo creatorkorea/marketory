@@ -35,6 +35,29 @@ p { margin: 0; }
 .availability p, .specimen > p, .connection > p { color: var(--color-text-secondary); }
 .badge { display: inline-flex; align-items: center; min-height: var(--component-status-badge-height); border-radius: var(--radius-pill); padding: 2px 12px; color: var(--color-neutral); background: var(--color-neutral-bg); font-size: 13px; font-weight: 500; }
 .story-line { display: flex; gap: var(--space-xl); margin-top: var(--space-section); font-size: 14px; color: var(--color-text-secondary); }
+.recruiting { margin-top: var(--space-page); scroll-margin-top: var(--space-lg); }
+.recruiting-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); padding-bottom: var(--space-lg); border-bottom: 1px solid var(--color-border); }
+.recruiting-heading h2 { margin-top: 0; }
+.recruiting-content { min-height: 180px; }
+.recruiting-list { list-style: none; padding: 0; margin: 0; }
+.recruiting-market { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; align-items: center; gap: var(--space-xl); padding-block: var(--space-xl); border-bottom: 1px solid var(--color-border); }
+.recruiting-market h3 { font-size: 20px; margin: var(--space-sm) 0; }
+.recruiting-badge { color: var(--color-success); background: var(--color-success-bg); }
+.recruiting-facts { margin: 0; display: grid; gap: var(--space-sm); }
+.recruiting-facts > div { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: var(--space-sm); }
+.recruiting-facts dt { color: var(--color-text-secondary); }
+.recruiting-facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+.public-market-back { margin-bottom: var(--space-xl); }
+@media (max-width: 900px) {
+  .recruiting-market { grid-template-columns: 1fr; gap: var(--space-lg); }
+  .recruiting-market > .button { justify-self: start; }
+}
+@media (max-width: 767px) {
+  .app-header { flex-wrap: wrap; padding-block: var(--space-sm); }
+  .app-header nav { width: 100%; justify-content: space-between; }
+  .recruiting { margin-top: var(--space-section); }
+  .recruiting-heading { flex-direction: column; align-items: flex-start; }
+}
 .footer { padding-block: var(--space-lg); display: flex; gap: var(--space-lg); justify-content: space-between; color: var(--color-text-secondary); font-size: 13px; border-top: 1px solid var(--color-border); }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-sm); min-height: var(--component-button-height); border: 1px solid transparent; border-radius: var(--component-button-rounded); padding: 9px 20px; font-weight: 600; cursor: pointer; transition: background 120ms; }
 .button-primary { color: var(--color-on-primary); background: var(--color-primary); }

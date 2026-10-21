@@ -8,6 +8,15 @@ const req = (path: string, init: RequestInit = {}) =>
     headers: { Authorization: "Bearer test-token", ...init.headers },
   });
 describe("backend relay trust boundary", () => {
+  it("exposes only GET public catalog with pagination and without credentials", async () => {
+    const fetcher = vi.fn().mockImplementation(async () => Response.json({ data: [], has_more: false }));
+    const response = await relay(req("public/projects?limit=12&offset=12&status=DRAFT"), ["public", "projects"], base, fetcher);
+    expect(response.status).toBe(200);
+    expect(String(fetcher.mock.calls[0][0])).toBe(`${base}/api/public/projects?limit=12&offset=12`);
+    expect(fetcher.mock.calls[0][1].headers.get("authorization")).toBeNull();
+    expect((await relay(new Request("https://app.example.test/api/backend/public/projects"), ["public", "projects"], base, fetcher)).status).toBe(200);
+    expect((await relay(req("public/projects", { method: "POST" }), ["public", "projects"], base, fetcher)).status).toBe(404);
+  });
   it("allows public policy without credentials, drops bearer, and restricts seller pagination", async () => {
     const fetcher = vi.fn().mockResolvedValue(Response.json({ data: {} }));
     expect(

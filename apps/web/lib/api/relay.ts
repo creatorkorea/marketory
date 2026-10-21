@@ -27,7 +27,7 @@ export async function relay(
     segments[0] === "attachments" && uuid.test(segments[1] ?? "");
   const publicRead =
     request.method === "GET" &&
-    (path === "attachments/policy" ||
+    (path === "attachments/policy" || path === "public/projects" ||
       (segments.length === 3 &&
         segments[0] === "public" &&
         segments[1] === "projects" &&
@@ -205,7 +205,7 @@ export async function relay(
   try {
     const target = new URL(`/api/${path}`, base);
     if (
-      (["projects", "me/applications"].includes(path) ||
+      (["projects", "me/applications", "public/projects"].includes(path) ||
         (project &&
           segments.length === 3 &&
           ["applications", "communications"].includes(segments[2]))) &&
