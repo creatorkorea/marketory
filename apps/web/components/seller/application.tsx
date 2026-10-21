@@ -246,6 +246,15 @@ function ApplicationEditor({
     <>
       <UnsavedGuard active={dirty || !!mutation.pending || uploadBusy} />
       {toast && <Toast message={toast} onClose={() => setToast("")} />}
+      <p className="intro seller-status-guidance">{
+        app.status === "DRAFT" ? "저장된 초안에서 이어서 준비할 수 있어요." :
+        app.status === "SUBMITTED" ? "신청이 접수되었습니다. 이후 결과는 내 신청에서 확인해 주세요." :
+        app.status === "NEED_INFO" ? "요청받은 항목을 보완하고 기한 안에 다시 제출해 주세요." :
+        app.status === "APPROVED" ? "선정되었습니다. 참가 확정 기한과 안내를 확인해 주세요." :
+        app.status === "CONFIRMED" ? "참가가 확정되었습니다. 부스와 운영 안내를 확인해 주세요." :
+        app.status === "CANCELLED" ? "취소된 신청입니다. 저장된 신청 내용을 확인할 수 있어요." :
+        "현재 신청 상태와 저장된 내용을 확인해 주세요."
+      }</p>
       <div className="seller-detail-heading">
         <div>
           <p className="eyebrow">내 신청</p>
@@ -472,8 +481,8 @@ function ApplicationEditor({
               </section>
               <section hidden={step !== 4}>
                 <h3>4. 동의 및 최종 확인</h3>
-                <dl className="seller-facts">
-                  {applicationFields.map((field) => (
+                <dl className="seller-facts seller-confirmation-facts">
+                  {applicationFields.filter((field) => !["electricity_required", "fire_required", "cold_storage_required", "vehicle_entry_required", "table_count"].includes(field)).map((field) => (
                     <div key={field}>
                       <dt>{labels[field]}</dt>
                       <dd className="seller-prose">
@@ -486,6 +495,7 @@ function ApplicationEditor({
                       </dd>
                     </div>
                   ))}
+                  <div><dt>운영 조건</dt><dd className="seller-prose">{["electricity_required", "fire_required", "cold_storage_required", "vehicle_entry_required"].filter(field => app[field as keyof Application] === true).map(field => labels[field]).join(" · ") || "추가 시설 요청 없음"} · 테이블 {app.table_count}개</dd></div>
                 </dl>
                 <p>
                   연결된 파일 {app.attachments.length}개 · 참가비{" "}

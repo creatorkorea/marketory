@@ -226,6 +226,25 @@ test("seller UX keeps uploads before next and cancellation deliberately collapse
   });
 });
 
+test("mobile confirmation retains selected facilities and long notes", async ({ page }) => {
+  await fixture(page);
+  await page.route(`**/api/backend/applications/${aid}`, r => r.fulfill({ json: { data: {
+    ...seed, electricity_required: true, cold_storage_required: true, table_count: 2,
+    request_note: "긴 요청 사항도 생략 없이 확인할 수 있어야 합니다. ".repeat(8),
+  } } }));
+  for (const width of [360, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto(`/p/${pid}/apply`);
+    await page.getByRole("button", { name: "2. 상품과 사진" }).click();
+    expect((await page.getByLabel("상품명 (필수)").boundingBox())!.y).toBeLessThan(600);
+    await page.getByRole("button", { name: "4. 동의 및 확인" }).click();
+    await expect(page.getByText("전기 필요 · 냉장 보관 필요 · 테이블 2개", { exact: true })).toBeVisible();
+    await expect(page.getByText("테스트용 정책 본문", { exact: true })).toBeVisible();
+    await expect(page.getByRole("definition").filter({ hasText: /긴 요청 사항도 생략 없이/ })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+});
+
 test("wizard saves, reviews server consent, and prevents duplicate submit", async ({
   page,
 }) => {
@@ -276,6 +295,7 @@ test("wizard saves, reviews server consent, and prevents duplicate submit", asyn
     fullPage: true,
   });
   await page.getByRole("button", { name: "4. 동의 및 확인" }).click();
+  await expect(page.getByText("추가 시설 요청 없음 · 테이블 0개", { exact: true })).toBeVisible();
   await expect(
     page.getByText("테스트용 정책 본문", { exact: true }),
   ).toBeVisible();
@@ -293,6 +313,8 @@ test("wizard saves, reviews server consent, and prevents duplicate submit", asyn
     .getByRole("button", { name: "신청 제출하기", exact: true })
     .click();
   await expect(page.getByText("접수 완료", { exact: true })).toBeVisible();
+  await expect(page.getByText("신청이 접수되었습니다. 이후 결과는 내 신청에서 확인해 주세요.", { exact: true })).toBeVisible();
+  await expect(page.getByText("저장된 초안에서 이어서 준비할 수 있어요.", { exact: true })).toHaveCount(0);
   await page.screenshot({
     path: "../../output/ux-audit-20261019/06-seller-submitted.png",
     fullPage: true,

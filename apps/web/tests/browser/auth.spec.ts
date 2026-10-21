@@ -163,7 +163,15 @@ test("login preserves design and usable form at narrow widths and 200% text", as
   }
   await page.screenshot({ path: "../../output/auth-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
+  expect((await page.getByLabel("이메일", { exact: true }).boundingBox())!.y).toBeLessThan(450);
+  await expect(page.getByRole("button", { name: "인증번호 받기" })).toBeInViewport();
   await page.screenshot({ path: "../../output/auth-mobile.png", fullPage: true });
+  const introduction = page.locator(".auth-mobile-story summary");
+  await introduction.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".auth-mobile-story")).toHaveAttribute("open", "");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".auth-mobile-story")).not.toHaveAttribute("open", "");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addStyleTag({ content: "body { font-size: 32px !important; } input,button { font-size: 32px !important; }" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

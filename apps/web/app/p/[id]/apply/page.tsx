@@ -11,9 +11,8 @@ export default async function Page({
 }) {
   const { id } = await params;
   return (
-    <main id="main" className="wrap account-page" tabIndex={-1}>
+    <main id="main" className="wrap account-page seller-application-page" tabIndex={-1}>
       <h1>마켓 신청</h1>
-      <p className="intro">저장된 초안에서 이어서 준비할 수 있어요.</p>
       <SellerApplication projectId={id} />
     </main>
   );

@@ -15,7 +15,7 @@ export default async function Page({
   const { offset } = await searchParams;
   const n = Number(offset ?? 0);
   return (
-    <main id="main" className="wrap account-page" tabIndex={-1}>
+    <main id="main" className="wrap account-page seller-application-page" tabIndex={-1}>
       <h1>신청 상세</h1>
       <SellerApplication
         id={id}
