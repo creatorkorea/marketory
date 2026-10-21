@@ -4,15 +4,16 @@ from uuid import UUID, uuid4
 
 import psycopg
 import pytest
-from marketory.communication_worker import process_one, recover_stale
-from marketory.config import Settings
-from marketory.email_provider import DeliveryResult
-from marketory.runtime import run_async
 from psycopg.rows import dict_row
 from pydantic import SecretStr
 from test_communications import action, client_for, data, queued
 from test_p1_p3 import isolated_db  # noqa: F401
 from test_reviews import fixture
+
+from marketory.communication_worker import process_one, recover_stale
+from marketory.config import Settings
+from marketory.email_provider import DeliveryResult
+from marketory.runtime import run_async
 
 
 def settings(dsn, **kwargs):

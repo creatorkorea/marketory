@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Annotated, Literal
 from uuid import UUID, uuid5
 
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from psycopg.rows import dict_row
@@ -97,6 +97,21 @@ class MemberInput(Strict):
     role: Literal["OPERATOR", "REVIEWER", "VIEWER"]
     active: bool
     reason: Text
+
+
+class PublicProjectSummary(BaseModel):
+    project_id: UUID
+    name: str
+    venue: str
+    event_date: date
+    recruit_end_at: AwareDatetime
+    allowed_categories: list[str]
+    participation_fee_krw: int
+
+
+class PublicProjectList(BaseModel):
+    data: list[PublicProjectSummary]
+    has_more: bool
 
 
 async def require_admin(conn, actor):
@@ -488,6 +503,28 @@ def project_router(settings, identity):
             mutate,
             admin=True,
         )
+
+    @router.get(
+        "/public/projects", operation_id="public_projects", response_model=PublicProjectList
+    )
+    async def public_list(
+        limit: Annotated[int, Query(ge=1, le=50)] = 12,
+        offset: Annotated[int, Query(ge=0)] = 0,
+    ):
+        # Same availability rule as public detail; explicitly select public fields only.
+        async with transaction(settings) as conn:
+            async with conn.cursor(row_factory=dict_row) as cur:
+                await cur.execute(
+                    "SELECT project_id,name,venue,event_date,recruit_end_at,"
+                    "policy_json->'allowed_categories' AS allowed_categories,"
+                    "policy_json->'participation_fee_krw' AS participation_fee_krw "
+                    "FROM public.projects WHERE deleted_at IS NULL AND status='RECRUITING' "
+                    "AND recruit_start_at<=now() AND now()<recruit_end_at AND now()<event_end_at "
+                    "ORDER BY recruit_end_at,project_id LIMIT %s OFFSET %s",
+                    (limit + 1, offset),
+                )
+                rows = await cur.fetchall()
+            return {"data": rows[:limit], "has_more": len(rows) > limit}
 
     @router.get("/public/projects/{project_id}", operation_id="public_project")
     async def public(project_id: UUID):

@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+
 from marketory import worker
 from marketory.config import Settings
 from marketory.runtime import run_async

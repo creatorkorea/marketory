@@ -1245,6 +1245,119 @@
         }
       }
     },
+    "/api/public/projects": {
+      "get": {
+        "summary": "Public List",
+        "operationId": "public_projects",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 50,
+              "minimum": 1,
+              "default": 12,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicProjectList"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Gone"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        }
+      }
+    },
     "/api/public/projects/{project_id}": {
       "get": {
         "summary": "Public",
@@ -7398,6 +7511,76 @@
           "expected_version"
         ],
         "title": "ProjectUpdate"
+      },
+      "PublicProjectList": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PublicProjectSummary"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "has_more": {
+            "type": "boolean",
+            "title": "Has More"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "has_more"
+        ],
+        "title": "PublicProjectList"
+      },
+      "PublicProjectSummary": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "venue": {
+            "type": "string",
+            "title": "Venue"
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Event Date"
+          },
+          "recruit_end_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Recruit End At"
+          },
+          "allowed_categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Allowed Categories"
+          },
+          "participation_fee_krw": {
+            "type": "integer",
+            "title": "Participation Fee Krw"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "name",
+          "venue",
+          "event_date",
+          "recruit_end_at",
+          "allowed_categories",
+          "participation_fee_krw"
+        ],
+        "title": "PublicProjectSummary"
       },
       "RequestInfo": {
         "properties": {
