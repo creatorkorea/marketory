@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { internalReturn } from "@/lib/seller/form";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAuthClient } from "@/lib/auth/client";
@@ -12,7 +14,10 @@ import { Notice } from "@/components/ui/notice";
 import { RequestStatus } from "@/components/requests/request-status";
 
 type Profile = { user_id: string; email: string; account_role: string; global_role: string; profile_required: boolean };
-export function AccountPanel() {
+export function AccountPanel({ returnTo }: { returnTo?: string }) {
+  const router = useRouter();
+  const destination = internalReturn(returnTo);
+  const loginHref = destination ? `/login?returnTo=${encodeURIComponent(destination)}` : "/login";
   const [client, setClient] = useState<SupabaseClient | null>(null);
   const [actor, setActor] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -24,6 +29,10 @@ export function AccountPanel() {
   const active = useRef<AbortController | null>(null);
   const account = useRef<string | null>(null);
   const running = useRef(false);
+
+  useEffect(() => {
+    if (destination && profile?.user_id === actor && profile?.account_role === "SELLER" && profile.global_role !== "PLATFORM_ADMIN") router.replace(destination);
+  }, [destination, profile, actor, router]);
 
   useEffect(() => {
     let alive = true;
@@ -104,7 +113,7 @@ export function AccountPanel() {
   if (!ready) return <Notice title="로그인 상태를 확인하고 있어요." />;
   if (!client || !actor) return <section className="account-section"><Notice title={client ? "로그인이 필요해요." : "로그인을 준비하고 있어요."}>
     {client ? "이메일로 로그인하면 계정을 확인할 수 있습니다." : "인증 서비스 연결 후 이용할 수 있습니다."}
-  </Notice>{logoutError && <Notice title="서버 로그아웃을 확인하지 못했어요." tone="warning">이 기기의 로그인 정보는 지웠지만 서버 연결이 끊겼습니다. 다시 로그인해 계정 상태를 확인해 주세요.</Notice>}<div className="actions"><ButtonLink href="/login">로그인하기</ButtonLink></div></section>;
+  </Notice>{logoutError && <Notice title="서버 로그아웃을 확인하지 못했어요." tone="warning">이 기기의 로그인 정보는 지웠지만 서버 연결이 끊겼습니다. 다시 로그인해 계정 상태를 확인해 주세요.</Notice>}<div className="actions"><ButtonLink href={loginHref}>로그인하기</ButtonLink></div></section>;
   return <section className="account-section">
     {profile ? <>
       <span className="badge">계정 확인 완료</span>
@@ -112,7 +121,7 @@ export function AccountPanel() {
       <dl className="account-facts"><div><dt>계정 유형</dt><dd>{profile.global_role === "PLATFORM_ADMIN" ? "플랫폼 관리자" : profile.account_role === "STAFF" ? "운영 스태프" : "셀러"}</dd></div>
         <div><dt>프로필</dt><dd>{profile.profile_required ? "작성 필요" : "작성 완료"}</dd></div></dl>
       {profile.global_role === "PLATFORM_ADMIN" || profile.account_role === "STAFF" ? <div className="actions"><ButtonLink href="/markets">마켓 관리하기</ButtonLink></div> : <div className="actions"><ButtonLink href="/seller/profile">{profile.profile_required ? "셀러 프로필 작성" : "셀러 프로필 수정"}</ButtonLink><ButtonLink variant="secondary" href="/me/applications">내 신청 확인</ButtonLink></div>}
-    </> : storageError ? <Notice title="요청 복구 정보를 보관할 수 없어요." tone="warning">브라우저의 사이트 저장 허용 여부를 확인한 뒤 새로고침해 주세요. 중복 처리를 막기 위해 요청을 시작하지 않았습니다.</Notice> : <RequestStatus result={result} onRetry={() => void load("manual")} onCurrent={() => void load("current")} />}
+    </> : storageError ? <Notice title="요청 복구 정보를 보관할 수 없어요." tone="warning">브라우저의 사이트 저장 허용 여부를 확인한 뒤 새로고침해 주세요. 중복 처리를 막기 위해 요청을 시작하지 않았습니다.</Notice> : <RequestStatus result={result} loginHref={loginHref} onRetry={() => void load("manual")} onCurrent={() => void load("current")} />}
     {logoutError && <Notice title="로그아웃을 완료하지 못했어요." tone="danger">네트워크를 확인한 뒤 다시 로그아웃해 주세요. 공유 기기에서는 로그아웃 완료를 확인해 주세요.</Notice>}
     <div className="account-footer"><Button variant="secondary" onClick={signOut} disabled={signingOut} aria-busy={signingOut}>이 기기에서 로그아웃</Button><Link className="text-button" href="/">홈으로</Link></div>
   </section>;

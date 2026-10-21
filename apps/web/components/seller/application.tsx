@@ -924,7 +924,7 @@ export function SellerApplication({
   listOffset?: number;
 }) {
   return (
-    <SellerAccess>
+    <SellerAccess returnTo={projectId ? `/p/${projectId}/apply` : undefined}>
       {(session) => (
         <ApplicationLoader
           session={session}

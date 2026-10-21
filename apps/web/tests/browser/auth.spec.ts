@@ -5,6 +5,62 @@ const user = { id: actor, email, aud: "authenticated", role: "authenticated", ap
 const token = `${Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url")}.${Buffer.from(JSON.stringify({ sub: actor, exp: Math.floor(Date.now() / 1000) + 3600, aud: "authenticated" })).toString("base64url")}.signature`;
 const session = { access_token: token, refresh_token: "test-refresh-only", token_type: "bearer", expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 3600, user };
 const profile = { data: { user_id: actor, email, account_role: "SELLER", profile_required: true } };
+const applicationPath = `/p/${actor}/apply`;
+
+for (const newAccount of [false, true]) {
+  test(`application login returns after account initialization (new=${newAccount})`, async ({ page }) => {
+    await setup(page);
+    let initialized = !newAccount;
+    let writes = 0;
+    await page.route("**/api/backend/**", (route) => {
+      const url = route.request().url();
+      if (url.endsWith("auth/bootstrap")) { writes++; initialized = true; return route.fulfill({ json: profile }); }
+      if (url.endsWith("/me")) return route.fulfill(initialized ? { json: profile } : { status: 403, json: { code: "BOOTSTRAP_REQUIRED" } });
+      if (url.endsWith("/me/seller")) return route.fulfill({ json: { data: null } });
+      if (url.includes("/me/applications?")) return route.fulfill({ json: { data: [] } });
+      if (url.includes("/public/projects/")) return route.fulfill({ json: { data: { project_id: actor, name: "인증 복귀 테스트 마켓", accepting_applications: true } } });
+      return route.fulfill({ status: 404, json: {} });
+    });
+    await page.goto(applicationPath);
+    await page.getByRole("link", { name: "로그인하고 신청 계속하기" }).click();
+    await expect(page).toHaveURL(new RegExp(`/login\\?returnTo=${encodeURIComponent(applicationPath)}$`));
+    await page.reload();
+    await page.getByLabel("이메일", { exact: true }).fill(email);
+    await page.getByRole("button", { name: "인증번호 받기" }).click();
+    await page.getByLabel("인증번호", { exact: true }).fill("123456");
+    await page.getByRole("button", { name: "인증하고 계속하기" }).click();
+    await expect(page).toHaveURL(applicationPath);
+    await expect(page.getByRole("heading", { name: "인증 복귀 테스트 마켓" })).toBeVisible();
+    await expect(page.getByText("셀러 프로필을 먼저 작성해 주세요.")).toBeVisible();
+    expect(writes).toBe(newAccount ? 1 : 0);
+  });
+}
+
+test("unsafe and duplicated login return destinations stay on account", async ({ page }) => {
+  await setup(page, true);
+  await page.route("**/api/backend/**", (route) => route.fulfill({ json: profile }));
+  for (const query of ["returnTo=https%3A%2F%2Fevil.example", `returnTo=${encodeURIComponent(applicationPath)}&returnTo=//evil.example`]) {
+    await page.goto(`/account?${query}`);
+    await expect(page.getByText(email, { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp("/account\\?"));
+  }
+});
+
+test("account verification failure retains destination for reauthentication", async ({ page }) => {
+  await setup(page, true);
+  await page.route("**/api/backend/**", (route) => route.fulfill({ status: 401, json: { code: "UNAUTHENTICATED" } }));
+  await page.goto(`/account?returnTo=${encodeURIComponent(applicationPath)}`);
+  await expect(page.getByRole("link", { name: "다시 로그인" })).toHaveAttribute("href", `/login?returnTo=${encodeURIComponent(applicationPath)}`);
+  await expect(page).toHaveURL(/\/account\?/);
+});
+
+test("staff account does not automatically enter seller application", async ({ page }) => {
+  await setup(page, true);
+  await page.route("**/api/backend/**", (route) => route.fulfill({ json: { data: { ...profile.data, account_role: "STAFF" } } }));
+  await page.goto(`/account?returnTo=${encodeURIComponent(applicationPath)}`);
+  await expect(page.getByRole("link", { name: "마켓 관리하기" })).toBeVisible();
+  await expect(page).toHaveURL(/\/account\?/);
+});
 async function setup(page: Page, signedIn = false, storedSession = session) {
   await page.route("**/api/auth/config", (route) => route.fulfill({ json: { url: "https://auth.example.test", key: "sb_publishable_test" } }));
   await page.route("https://auth.example.test/auth/v1/**", async (route) => {

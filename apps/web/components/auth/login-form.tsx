@@ -7,8 +7,10 @@ import { getAuthClient, authError } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
+import { internalReturn } from "@/lib/seller/form";
 
-export function LoginForm() {
+export function LoginForm({ returnTo }: { returnTo?: string }) {
+  const destination = internalReturn(returnTo);
   const router = useRouter();
   const [client, setClient] = useState<SupabaseClient | null>(null);
   const [ready, setReady] = useState(false);
@@ -61,7 +63,7 @@ export function LoginForm() {
       const result = await client.auth.verifyOtp({ email, token: code.trim(), type: "email" });
       if (!alive.current) return;
       if (result.error || !result.data.session) { setError(authError(result.error, true)); codeRef.current?.focus(); return; }
-      setCode(""); router.replace("/account");
+      setCode(""); router.replace(destination ? `/account?returnTo=${encodeURIComponent(destination)}` : "/account");
     } catch { if (alive.current) setError(authError(null)); }
     finally { working.current = false; if (alive.current) setBusy(false); }
   }
@@ -69,6 +71,7 @@ export function LoginForm() {
   return <section className="auth-panel" aria-labelledby="login-title">
     <p className="eyebrow">마켓토리 시작하기</p>
     <h1 id="login-title">{stage === "email" ? "이메일로 시작해요." : "메일을 확인해 주세요."}</h1>
+    {destination && <p className="hint">인증과 계정 확인을 마치면 신청 화면으로 돌아갑니다.</p>}
     <p className="intro">{stage === "email" ? "비밀번호 없이, 이메일 인증번호로 로그인하세요. 처음이라면 계정이 함께 만들어집니다." : `${email} 주소로 받은 인증번호를 입력하세요.`}</p>
     {ready && !client && <Notice title="로그인을 준비하고 있어요." tone="warning">인증 서비스가 아직 연결되지 않았습니다. 연결이 완료되면 이메일로 시작할 수 있어요.</Notice>}
     <form noValidate onSubmit={submit} aria-busy={busy}>

@@ -5,14 +5,18 @@ import { getAuthClient } from "@/lib/auth/client";
 import { readAccess } from "@/lib/api/access-read";
 import { AccessLoading } from "@/components/auth/access-loading";
 import { api } from "@/lib/api/client";
+import { internalReturn } from "@/lib/seller/form";
 import { Notice } from "@/components/ui/notice";
 import { Button, ButtonLink } from "@/components/ui/button";
 export type SellerSession = { client: SupabaseClient; actor: string };
 export function SellerAccess({
   children,
+  returnTo,
 }: {
   children: (session: SellerSession) => ReactNode;
+  returnTo?: string;
 }) {
+  const destination = internalReturn(returnTo);
   const [session, setSession] = useState<SellerSession | null>(null),
     [state, setState] = useState("loading"),
     [retry, setRetry] = useState(0),
@@ -102,7 +106,7 @@ export function SellerAccess({
         }
       >
         {state === "login"
-          ? "내 계정에서 이메일 인증을 완료한 뒤 이 마켓 링크로 돌아와 주세요."
+          ? destination ? "이메일 인증을 마치면 이 마켓 신청 화면으로 돌아옵니다." : "이메일 인증을 완료한 뒤 이용해 주세요."
           : state === "error"
             ? "연결이 지연되거나 일시적으로 끊겼어요. 잠시 후 다시 확인해 주세요."
             : "계정과 이용 권한을 확인합니다."}
@@ -111,7 +115,7 @@ export function SellerAccess({
         {state === "error" && (
           <Button onClick={() => setRetry((v) => v + 1)}>다시 확인</Button>
         )}
-        <ButtonLink href="/account">내 계정 확인</ButtonLink>
+        {state === "login" && destination ? <ButtonLink href={`/login?returnTo=${encodeURIComponent(destination)}`}>로그인하고 신청 계속하기</ButtonLink> : <ButtonLink href="/account">내 계정 확인</ButtonLink>}
       </div>
     </section>
   );
