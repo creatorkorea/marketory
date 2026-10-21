@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from psycopg.types.json import Jsonb
 from pydantic import Field
 
+from marketory.application_domain import require_application
 from marketory.booth_domain import rows
 from marketory.communication_domain import (
     communication_context,
@@ -125,6 +126,32 @@ def communication_router(settings, identity):
     Actor = Annotated[object, Depends(identity)]
     Key = Annotated[UUID, Header(alias="Idempotency-Key")]
 
+    @router.get("/applications/{application_id}/notices", operation_id="seller_notices")
+    async def seller_notices(
+        application_id: UUID,
+        actor: Actor,
+        limit: Annotated[int, Query(ge=1, le=20)] = 5,
+        offset: Annotated[int, Query(ge=0)] = 0,
+    ):
+        async with transaction(settings) as conn:
+            await require_application(conn, actor.user_id, application_id)
+            items = await rows(
+                conn,
+                "SELECT communication_id,published_subject AS subject,published_body AS body,"
+                "published_content_version AS content_version,published_at "
+                "FROM public.communications WHERE application_id=%s "
+                "AND published_at IS NOT NULL AND withdrawn_at IS NULL "
+                "ORDER BY published_at DESC,communication_id LIMIT %s OFFSET %s",
+                (application_id, limit + 1, offset),
+            )
+            return {
+                "data": jsonable_encoder(
+                    dict(
+                        items=items[:limit], has_more=len(items) > limit, limit=limit, offset=offset
+                    )
+                )
+            }
+
     @router.get("/projects/{project_id}/communications", operation_id="list_communications")
     async def listing(
         project_id: UUID,
@@ -236,9 +263,9 @@ def communication_router(settings, identity):
 
             async def mutate():
                 version_matches(message, body.expected_version)
-                if action != "resolve":
+                if action not in ("resolve", "unpublish"):
                     before_end(project)
-                if message["superseded_at"]:
+                if message["superseded_at"] and action != "unpublish":
                     raise DomainError(409, "SUPERSEDED", "새 초안으로 대체된 메시지입니다.")
                 status = message["send_status"]
                 attempts = await rows(
@@ -250,7 +277,35 @@ def communication_router(settings, identity):
                 before = await communication_data(conn, message)
                 target = cid
                 response_status = 200
-                if action == "revise":
+                if action == "unpublish":
+                    if not message["published_at"] or message["withdrawn_at"]:
+                        raise DomainError(409, "NOT_PUBLISHED", "게시 중인 안내가 아닙니다.")
+                    await conn.execute(
+                        "UPDATE public.communications SET withdrawn_at=now(),"
+                        "version=version+1,updated_at=now() WHERE communication_id=%s",
+                        (cid,),
+                    )
+                elif action == "publish":
+                    await validate_context(conn, message, app, project)
+                    if message["approved_version"] != message["content_version"]:
+                        raise DomainError(409, "APPROVAL_REQUIRED", "현재 초안 승인이 필요합니다.")
+                    if body.content_version != message["content_version"]:
+                        raise DomainError(
+                            409, "CONTENT_VERSION_CONFLICT", "현재 내용을 확인해 주세요."
+                        )
+                    if (
+                        not message["withdrawn_at"]
+                        and message["published_content_version"] == message["content_version"]
+                    ):
+                        raise DomainError(409, "ALREADY_PUBLISHED", "이미 게시된 내용입니다.")
+                    await conn.execute(
+                        "UPDATE public.communications SET published_subject=subject,"
+                        "published_body=body,published_content_version=content_version,"
+                        "published_at=now(),published_by=%s,withdrawn_at=NULL,"
+                        "version=version+1,updated_at=now() WHERE communication_id=%s",
+                        (actor.user_id, cid),
+                    )
+                elif action == "revise":
                     if status in ("SENDING", "UNKNOWN"):
                         raise DomainError(409, "INVALID_STATUS", "발송 결과를 먼저 확인해 주세요.")
                     context = await communication_context(conn, app, project)
@@ -424,5 +479,15 @@ def communication_router(settings, identity):
     @router.post("/communications/{communication_id}/resolve", operation_id="resolve_communication")
     async def resolve(communication_id: UUID, body: Resolve, actor: Actor, idempotency_key: Key):
         return await change(communication_id, body, actor, idempotency_key, "resolve")
+
+    @router.post("/communications/{communication_id}/publish", operation_id="publish_communication")
+    async def publish(communication_id: UUID, body: Approve, actor: Actor, idempotency_key: Key):
+        return await change(communication_id, body, actor, idempotency_key, "publish")
+
+    @router.post(
+        "/communications/{communication_id}/unpublish", operation_id="unpublish_communication"
+    )
+    async def unpublish(communication_id: UUID, body: Mutation, actor: Actor, idempotency_key: Key):
+        return await change(communication_id, body, actor, idempotency_key, "unpublish")
 
     return router

@@ -243,6 +243,8 @@ def build_router(settings, verify, storage=None):
             "communications.retry",
             "communications.revise",
             "communications.resolve",
+            "communications.publish",
+            "communications.unpublish",
         ):
             raise DomainError(422, "UNKNOWN_OPERATION", "지원하지 않는 요청 종류입니다.")
         async with transaction(settings) as conn:

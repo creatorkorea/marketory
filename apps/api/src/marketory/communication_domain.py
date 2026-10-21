@@ -78,7 +78,20 @@ async def communication_data(conn, message):
         k: v
         for k, v in message.items()
         if k not in ("idempotency_key", "claim_token", "context_snapshot_json", "sender_snapshot")
+        and not k.startswith("published_")
+        and k != "withdrawn_at"
     }
+    result["publication"] = (
+        dict(
+            subject=message["published_subject"],
+            body=message["published_body"],
+            content_version=message["published_content_version"],
+            published_at=message["published_at"],
+            withdrawn_at=message["withdrawn_at"],
+        )
+        if message["published_at"]
+        else None
+    )
     result["attempts"] = await rows(
         conn,
         "SELECT * FROM public.communication_attempts WHERE communication_id=%s ORDER BY attempt_no",
@@ -91,6 +104,8 @@ async def communication_data(conn, message):
         (message["communication_id"],),
     )
     actions = []
+    if message["published_at"] and not message["withdrawn_at"]:
+        actions.append("unpublish")
     if not message["superseded_at"]:
         status = message["send_status"]
         if status == "UNKNOWN":
@@ -121,6 +136,11 @@ async def communication_data(conn, message):
                 if status == "DRAFT":
                     actions.append("approve")
                 if message["approved_version"] == message["content_version"]:
+                    if (
+                        message["withdrawn_at"]
+                        or message["published_content_version"] != message["content_version"]
+                    ):
+                        actions.append("publish")
                     if status == "READY":
                         actions.append("send")
                     if status == "FAILED" and message["failure_reason"] != "PROVIDER_KEY_EXPIRED":

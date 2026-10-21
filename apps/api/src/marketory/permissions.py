@@ -68,6 +68,8 @@ async def authorize_result(conn, actor, row):
         "communications.retry",
         "communications.revise",
         "communications.resolve",
+        "communications.publish",
+        "communications.unpublish",
     ):
         if row["resource_type"] == "communication":
             from marketory.communication_domain import require_communication
