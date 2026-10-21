@@ -53,7 +53,7 @@ function Board({
   const [denied, setDenied] = useState(false);
   const [loading, setLoading] = useState(true);
   const [decision, setDecision] = useState<
-    "approve" | "send" | "retry" | "resolve" | null
+    "approve" | "send" | "retry" | "resolve" | "publish" | "unpublish" | null
   >(null);
   const [next, setNext] = useState<{ id: string | null } | null>(null);
   const [toast, setToast] = useState("");
@@ -242,7 +242,7 @@ function Board({
           payload = {
             expected_version: message.version,
             reason: required(reason, "reason", "처리 사유"),
-            ...(action === "approve"
+            ...(["approve", "publish"].includes(action)
               ? { content_version: message.content_version }
               : {}),
           };
@@ -264,7 +264,7 @@ function Board({
       setDecision(null);
     }
   };
-  const prepare = (action: "approve" | "send" | "retry" | "resolve") => {
+  const prepare = (action: "approve" | "send" | "retry" | "resolve" | "publish" | "unpublish") => {
     try {
       required(reason, "reason", "처리 사유");
       if (action === "resolve" && message)
@@ -349,7 +349,7 @@ function Board({
             </Notice>
           )}
           <p className="muted">
-            초안 작성 → 내용 승인 → 별도 발송 요청 → 결과 확인. 제공사 접수
+            초안 작성 → 내용 승인 후 셀러 게시 또는 별도 이메일 발송 요청. 제공사 접수
             완료는 수신·열람 완료가 아닙니다.
           </p>
           <div className="communications-layout">
@@ -496,7 +496,7 @@ function Board({
                       <p id="communication-target-help" className="field-help">
                         {error?.field === "target"
                           ? error.message
-                          : "신청에 등록된 이메일로만 안내해요."}
+                          : "선택한 신청의 셀러에게 게시하거나 등록된 이메일로 발송할 수 있어요."}
                       </p>
                     </div>
                     {!targets.length && (
@@ -554,6 +554,20 @@ function Board({
                         {message.approved_version}판
                       </p>
                     )}
+                    <section aria-label="셀러 게시 상태" className="market-section">
+                      <h3>{message.publication ? (message.publication.withdrawn_at ? "게시 내림" : "셀러에게 게시 중") : "셀러에게 미게시"}</h3>
+                      <p className="hint">내용 승인과 게시는 별도입니다. 게시하면 해당 셀러의 내 신청에 표시되며 이메일은 발송하지 않습니다.</p>
+                      {message.publication && <>
+                        <p className="muted">게시 {kstDisplay(message.publication.published_at)} (KST) · 게시 내용 {message.publication.content_version}판</p>
+                        {message.publication.withdrawn_at && <p className="muted">게시 내림 {kstDisplay(message.publication.withdrawn_at)} (KST)</p>}
+                        {!message.publication.withdrawn_at && message.publication.content_version !== message.content_version && <Notice title="이전 게시 내용이 유지되고 있어요.">수정 내용을 승인하고 다시 게시해야 셀러 화면에 반영됩니다.</Notice>}
+                        <details>
+                          <summary>마지막 게시 내용 확인</summary>
+                          <h4 className="seller-prose">{message.publication.subject}</h4>
+                          <p className="seller-prose">{message.publication.body}</p>
+                        </details>
+                      </>}
+                    </section>
                     {message.failure_reason && (
                       <Notice
                         tone="warning"
@@ -575,7 +589,7 @@ function Board({
                     {message.superseded_at && (
                       <Notice title="후속 초안이 생성된 안내예요.">
                         이 안내는 수정하거나 다시 발송할 수 없어요. 목록에서
-                        후속 초안을 확인해 주세요.
+                        후속 초안을 확인해 주세요. 이미 게시된 안내는 유지되며 게시 내리기로 숨길 수 있어요.
                       </Notice>
                     )}
                     <Field
@@ -652,7 +666,7 @@ function Board({
                     error={
                       error?.field === "reason" ? error.message : undefined
                     }
-                    hint="수정·승인·발송·결과 확인의 이유를 남겨 주세요."
+                    hint="수정·승인·게시·발송·결과 확인의 이유를 남겨 주세요."
                     onChange={(e) => setReason(e.target.value)}
                   />
                 )}
@@ -670,7 +684,7 @@ function Board({
                     </Button>
                   )}
                   {message &&
-                    (["approve", "send", "retry", "resolve"] as const)
+                    (["approve", "publish", "unpublish", "send", "retry", "resolve"] as const)
                       .filter((action) =>
                         message.allowed_actions.includes(action),
                       )
@@ -687,6 +701,8 @@ function Board({
                               send: "발송 요청",
                               retry: "같은 내용 재시도",
                               resolve: "근거로 결과 기록",
+                              publish: message.publication ? "셀러에게 다시 게시" : "셀러에게 게시",
+                              unpublish: "게시 내리기",
                             }[action]
                           }
                         </Button>
@@ -765,6 +781,8 @@ function Board({
               send: "안내 발송을 요청할까요?",
               retry: "같은 내용을 다시 발송 요청할까요?",
               resolve: "확인 근거로 결과를 기록할까요?",
+              publish: "이 내용을 셀러에게 게시할까요?",
+              unpublish: "셀러에게 게시한 안내를 내릴까요?",
             }[decision]
           }
           confirm={
@@ -773,6 +791,8 @@ function Board({
               send: "발송 요청",
               retry: "같은 내용 재시도",
               resolve: "결과 기록",
+              publish: message.publication ? "셀러에게 다시 게시" : "셀러에게 게시",
+              unpublish: "게시 내리기",
             }[decision]
           }
           onCancel={() => setDecision(null)}
@@ -780,11 +800,15 @@ function Board({
         >
           <p>{message.recipient_snapshot}</p>
           <p>
-            <strong>{message.subject}</strong> · 내용 {message.content_version}
+            <strong>{decision === "unpublish" ? message.publication?.subject : message.subject}</strong> · 내용 {decision === "unpublish" ? message.publication?.content_version : message.content_version}
             판
           </p>
           <p>
-            {decision === "approve"
+            {decision === "publish"
+              ? "해당 셀러의 내 신청에 이 내용을 게시합니다. 기존 게시 내용은 교체됩니다. 이메일은 발송하지 않습니다."
+              : decision === "unpublish"
+              ? "셀러의 내 신청에서 이 안내가 숨겨집니다. 이메일 발송 상태와 저장된 내용은 유지됩니다."
+              : decision === "approve"
               ? "승인은 발송하지 않습니다. 승인 후 별도로 발송을 요청해 주세요."
               : decision === "resolve"
                 ? `${outcomeLabels[outcome]} · 근거: ${evidence}`
@@ -792,8 +816,7 @@ function Board({
           </p>
           <p>처리 사유: {reason}</p>
           {!list?.delivery_enabled &&
-            decision !== "approve" &&
-            decision !== "resolve" && (
+            (decision === "send" || decision === "retry") && (
               <p>실제 이메일 발송이 현재 꺼져 있습니다.</p>
             )}
         </ConfirmDialog>

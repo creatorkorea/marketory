@@ -151,7 +151,15 @@ async function setup(
       if (path.endsWith("/approve")) {
         message.send_status = "READY";
         message.approved_version = message.content_version;
-        message.allowed_actions = ["revise", "send"];
+        message.allowed_actions = ["revise", "send", "publish"];
+      }
+      if (path.endsWith("/publish")) {
+        Object.assign(message, {publication: {subject: message.subject, body: message.body, content_version: message.content_version, published_at: seed.created_at, withdrawn_at: null}});
+        message.allowed_actions = ["revise", "send", "unpublish"];
+      }
+      if (path.endsWith("/unpublish")) {
+        Object.assign(message, {publication: {subject: message.subject, body: message.body, content_version: message.content_version, published_at: seed.created_at, withdrawn_at: seed.created_at}});
+        message.allowed_actions = ["revise", "send", "publish"];
       }
       if (path.endsWith("/send") || path.endsWith("/retry")) {
         message.send_status = "QUEUED";
@@ -225,6 +233,29 @@ async function openDetail(page: Page) {
     seed.subject,
   );
 }
+test("publish and withdraw are explicit actions independent of email", async ({page}) => {
+  const requests = await setup(page);
+  await openDetail(page);
+  await expect(page.getByRole("button", {name: "셀러에게 게시", exact: true})).toHaveCount(0);
+  await page.getByLabel("처리 사유", {exact: true}).fill("내용 검토");
+  await page.getByRole("button", {name: "내용 승인", exact: true}).click();
+  await page.getByRole("dialog").getByRole("button", {name: "내용 승인", exact: true}).click();
+  await page.getByLabel("처리 사유", {exact: true}).fill("셀러 게시");
+  await page.getByRole("button", {name: "셀러에게 게시", exact: true}).click();
+  await expect(page.getByRole("dialog")).toContainText("이메일은 발송하지 않습니다");
+  await page.getByRole("dialog").getByRole("button", {name: "셀러에게 게시", exact: true}).click();
+  await expect(page.getByText("셀러에게 게시 중", {exact: true})).toBeVisible();
+  await page.screenshot({path:"../../output/publication-operator.png",fullPage:true});
+  await page.getByLabel("본문", {exact: true}).fill("아직 저장하지 않은 변경");
+  await expect(page.getByRole("button", {name: "게시 내리기", exact: true})).toBeDisabled();
+  await page.getByLabel("본문", {exact: true}).fill(seed.body);
+  await page.getByLabel("처리 사유", {exact: true}).fill("게시 철회");
+  await page.getByRole("button", {name: "게시 내리기", exact: true}).click();
+  await page.getByRole("dialog").getByRole("button", {name: "게시 내리기", exact: true}).click();
+  await expect(page.getByText("게시 내림", {exact: true})).toBeVisible();
+  expect(requests.map(r => r.path.split('/').at(-1))).toEqual(["approve", "publish", "unpublish"]);
+  expect(requests[1].body.content_version).toBe(1);
+});
 test("approval and queue are separate confirmations; disabled delivery remains visible", async ({
   page,
 }) => {
@@ -369,6 +400,27 @@ test("reload pending marker only looks up the original operation", async ({
   ).toBeVisible();
   expect(requests).toHaveLength(0);
 });
+for (const operation of ["publish", "unpublish"]) {
+  test(`reload recovers ${operation} without repeating a mutation`, async ({page}) => {
+    const requests = await setup(page);
+    await page.addInitScript(({actor, projectId, cid, operation}) => sessionStorage.setItem(
+      `marketory:mutation:${actor}:communications:${projectId}`,
+      JSON.stringify({key:cid, operation:`communications.${operation}`, path:`communications/${cid}/${operation}`,method:"POST"}),
+    ), {actor, projectId, cid, operation});
+    const lookups: string[] = [];
+    await page.route("**/api/backend/me/requests/**", route => {
+      lookups.push(new URL(route.request().url()).pathname);
+      return route.fulfill({json:{outcome:"SUCCEEDED",http_status:200,response:{data:{...seed,send_status:"READY",allowed_actions:["revise"],publication:{subject:seed.subject,body:seed.body,content_version:1,published_at:seed.created_at,withdrawn_at: operation === "unpublish" ? seed.created_at : null}}}}});
+    });
+    await page.goto(base);
+    await expect(page.getByRole("button",{name:"기존 요청 다시 확인"})).toBeVisible();
+    await page.getByRole("button",{name:"기존 요청 다시 확인"}).click();
+    await expect(page.getByRole("heading",{name:operation === "publish" ? "셀러에게 게시 중" : "게시 내림",exact:true})).toBeVisible();
+    expect(lookups).toEqual([`/api/backend/me/requests/communications.${operation}/${cid}`]);
+    expect(requests).toHaveLength(0);
+    expect(await page.evaluate(({actor,projectId}) => sessionStorage.getItem(`marketory:mutation:${actor}:communications:${projectId}`),{actor,projectId})).toBeNull();
+  });
+}
 test("denied and empty states do not expose editable recipient data", async ({
   page,
 }) => {

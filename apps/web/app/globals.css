@@ -183,6 +183,8 @@ legend { font-size:20px; font-weight:600; margin-bottom:var(--space-lg); }
 .seller-facts dt { font-weight: 600; }
 .seller-facts dd { margin: 0; min-width: 0; }
 .seller-prose { white-space: pre-wrap; overflow-wrap: anywhere; }
+.seller-notices { min-width: 0; }
+.seller-notice { border-top: 1px solid var(--color-border); padding-block: var(--space-lg); }
 .seller-tags { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-block: var(--space-md); }
 .seller-uploads { max-width: 560px; border-top: 1px solid var(--color-border); padding-top: var(--space-lg); margin-top: var(--space-xl); }
 .seller-uploads > p { margin-block: var(--space-sm); }

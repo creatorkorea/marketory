@@ -40,13 +40,14 @@ export async function relay(
     (communication &&
       segments.length === 3 &&
       request.method === "POST" &&
-      ["approve", "send", "retry", "revise", "resolve"].includes(
+      ["approve", "send", "retry", "revise", "resolve", "publish", "unpublish"].includes(
         segments[2],
       )) ||
     (path === "me/seller" &&
       ["GET", "POST", "PATCH"].includes(request.method)) ||
     (path === "me/applications" && request.method === "GET") ||
     (path === "applications" && request.method === "POST") ||
+    (application && segments.length === 3 && segments[2] === "notices" && request.method === "GET") ||
     (application &&
       segments.length === 2 &&
       ["GET", "PATCH"].includes(request.method)) ||
@@ -127,6 +128,8 @@ export async function relay(
             "communications.retry",
             "communications.revise",
             "communications.resolve",
+            "communications.publish",
+            "communications.unpublish",
             "auth.bootstrap",
             "projects.update",
             "projects.create",
@@ -206,6 +209,7 @@ export async function relay(
     const target = new URL(`/api/${path}`, base);
     if (
       (["projects", "me/applications", "public/projects"].includes(path) ||
+        (application && segments.length === 3 && segments[2] === "notices") ||
         (project &&
           segments.length === 3 &&
           ["applications", "communications"].includes(segments[2]))) &&

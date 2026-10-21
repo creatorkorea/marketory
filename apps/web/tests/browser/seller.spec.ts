@@ -87,6 +87,31 @@ const policy = {
     "application/pdf",
   ],
 };
+test("seller published notices show safe text, retry and pagination on mobile", async ({page}) => {
+  await page.setViewportSize({width: 390, height: 844});
+  await fixture(page);
+  await page.route(`**/api/backend/applications/${aid}`, route => route.fulfill({json:{data:{...seed,status:"CONFIRMED",allowed_actions:[]}}}));
+  let fail = true;
+  await page.route(`**/api/backend/applications/${aid}/notices**`, route => {
+    if (fail) return route.fulfill({status:503,json:{code:"UNAVAILABLE"}});
+    const offset = Number(new URL(route.request().url()).searchParams.get("offset"));
+    return route.fulfill({json:{data:{items:[{communication_id: String(offset), subject: offset ? "이전 안내" : "행사 준비 안내", body: "<script>실행하지 않음</script>\n준비물: 가격표\n" + "긴안내".repeat(80), content_version:1, published_at:"2026-10-21T13:00:00Z"}],limit:5,offset,has_more:offset===0}}});
+  });
+  await page.goto(`/me/applications/${aid}`);
+  const region = page.getByRole("region",{name:"운영 안내",exact:true});
+  await expect(region.getByText("운영 안내를 불러오지 못했어요.")).toBeVisible();
+  fail = false;
+  await region.getByRole("button",{name:"다시 불러오기"}).click();
+  await expect(region.getByRole("heading",{name:"행사 준비 안내"})).toBeVisible();
+  await expect(region.getByText(/<script>실행하지 않음/)).toBeVisible();
+  await region.getByRole("button",{name:"다음 안내"}).click();
+  await expect(region.getByRole("heading",{name:"이전 안내"})).toBeVisible();
+  await expect(region.getByRole("heading",{name:"행사 준비 안내"})).toHaveCount(0);
+  await region.getByRole("button",{name:"이전 안내"}).click();
+  await expect(region.getByRole("heading",{name:"행사 준비 안내"})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path:"../../output/publication-seller-mobile.png",fullPage:true});
+});
 test("seller sees confirmed booth details and pending placement distinctly", async ({
   page,
 }) => {

@@ -18,7 +18,7 @@ export default async function Page({
       <p className="eyebrow">마켓토리 운영</p>
       <h1>셀러 안내</h1>
       <p className="intro">
-        셀러별 안내 내용을 검토하고 승인한 뒤, 별도로 발송을 요청해요.
+        셀러별 안내 내용을 승인한 뒤 내 신청에 게시하거나 이메일 발송을 요청해요.
       </p>
       <CommunicationsBoard id={id} query={listQuery(await searchParams)} />
     </main>

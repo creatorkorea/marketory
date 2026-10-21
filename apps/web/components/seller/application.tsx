@@ -1,4 +1,5 @@
 "use client";
+import { SellerNotices } from "./notices";
 import {
   useCallback,
   useEffect,
@@ -352,6 +353,7 @@ function ApplicationEditor({
           운영자가 배치를 확정하면 이곳에서 확인할 수 있습니다.
         </Notice>
       )}
+      {app.status !== "DRAFT" && <SellerNotices key={app.application_id} session={session} applicationId={app.application_id} />}
       {app.status === "NEED_INFO" && (
         <Notice title="요청한 항목만 보완할 수 있어요." tone="warning">
           <p>보완기한 (한국시간): {kstDisplay(app.info_due_at)}</p>
@@ -664,7 +666,7 @@ function ApplicationEditor({
       )}
       {app.status === "CONFIRMED" && (
         <Notice title="참가확정이 완료됐어요.">
-          행사 준비 안내와 배치 정보는 추후 내 신청에서 확인해 주세요.
+          이 화면의 운영 안내와 부스 정보를 확인해 주세요.
         </Notice>
       )}
       {app.allowed_actions.includes("cancel") && (

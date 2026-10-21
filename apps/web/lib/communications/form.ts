@@ -51,6 +51,13 @@ export type Message = {
   superseded_at: string | null;
   created_at: string;
   allowed_actions: string[];
+  publication?: {
+    subject: string;
+    body: string;
+    content_version: number;
+    published_at: string;
+    withdrawn_at: string | null;
+  } | null;
   attempts: {
     attempt_id: string;
     attempt_no: number;

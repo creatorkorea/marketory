@@ -8,6 +8,17 @@ const req = (path: string, init: RequestInit = {}) =>
     headers: { Authorization: "Bearer test-token", ...init.headers },
   });
 describe("backend relay trust boundary", () => {
+  it("relays owner notices and explicit publication mutations without widening query access", async () => {
+    const id = "12345678-1234-4123-8123-123456789abc";
+    const fetcher = vi.fn().mockImplementation(async (url) => Response.json({ url: String(url) }));
+    const reply = await relay(req(`applications/${id}/notices?limit=5&offset=5&actor=other`), ["applications", id, "notices"], base, fetcher);
+    expect(reply.status).toBe(200);
+    expect((await reply.json()).url).toBe(`${base}/api/applications/${id}/notices?limit=5&offset=5`);
+    for (const action of ["publish", "unpublish"]) {
+      const result = await relay(req(`communications/${id}/${action}`, {method: "POST", headers: {"Content-Type": "application/json", "Idempotency-Key": id, Origin: "https://app.example.test"}, body: JSON.stringify({expected_version: 1, reason: "확인"})}), ["communications", id, action], base, fetcher);
+      expect(result.status).toBe(200);
+    }
+  });
   it("exposes only GET public catalog with pagination and without credentials", async () => {
     const fetcher = vi.fn().mockImplementation(async () => Response.json({ data: [], has_more: false }));
     const response = await relay(req("public/projects?limit=12&offset=12&status=DRAFT"), ["public", "projects"], base, fetcher);
