@@ -142,6 +142,12 @@ legend { font-size:20px; font-weight:600; margin-bottom:var(--space-lg); }
 .seller-steps button:active { background: var(--color-surface-subtle); }
 .seller-steps button[aria-current=step] { background: var(--color-primary); color: var(--color-on-primary); }
 .seller-wizard-actions { border-top: 1px solid var(--color-border); padding-top: var(--space-lg); margin-top: var(--space-xl); }
+.seller-wizard-controls { max-width: 560px; min-width: 0; }
+.seller-cancel summary { cursor: pointer; font-weight: 600; min-height: 44px; padding-block: var(--space-sm); }
+.seller-cancel[open] > .hint { margin-block: var(--space-sm) var(--space-lg); }
+.seller-cancel .field { max-width: 560px; }
+.review-active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-lg); }
+.review-active-filters .badge { white-space: normal; overflow-wrap: anywhere; max-width: 100%; height: auto; }
 .seller-detail-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-md); margin-block: var(--space-xl); }
 .seller-facts { max-width: 800px; margin-block: var(--space-xl); }
 .seller-facts > div { display: grid; grid-template-columns: 180px minmax(0,1fr); gap: var(--space-md); padding-block: var(--space-md); border-bottom: 1px solid var(--color-border); }
@@ -196,6 +202,8 @@ legend { font-size:20px; font-weight:600; margin-bottom:var(--space-lg); }
   .review-table td { padding: var(--space-xs) 0; border: 0; }
   .review-section .seller-facts > div { grid-template-columns: minmax(0, 1fr); }
   .review-filters > .button { margin-top: 0; }
+  .review-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .review-filters .field:nth-child(3) { grid-column: 1 / -1; }
 }
 
 /* Booth management: existing DESIGN.md tokens and native form controls. */

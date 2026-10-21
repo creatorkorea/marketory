@@ -168,6 +168,82 @@ async function setup(
   });
   return requests;
 }
+test("operator UX explains active filters and distinguishes empty states", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/backend/projects/*/applications?*", (r) =>
+    r.fulfill({
+      json: {
+        data: {
+          items: [],
+          total: 0,
+          limit: 20,
+          offset: 0,
+          project: seed.project,
+          role: "OPERATOR",
+        },
+      },
+    }),
+  );
+  await page.goto(
+    `${base}?status=REVIEWING&category=${encodeURIComponent("공예")}`,
+  );
+  await expect(page.getByRole("region", { name: "적용된 필터" })).toContainText(
+    "검토 중",
+  );
+  await expect(page.getByRole("region", { name: "적용된 필터" })).toContainText(
+    "공예",
+  );
+  await expect(page.getByText("조건에 맞는 신청이 없어요.")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: "../../output/ux-audit-20261019/04-filter-empty-mobile.png",
+    fullPage: true,
+  });
+  await page.getByRole("link", { name: "전체 신청 보기" }).click();
+  await expect(page.getByText("아직 접수된 신청이 없어요.")).toBeVisible();
+  await expect(page.getByRole("region", { name: "적용된 필터" })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole("navigation", { name: "마켓 업무 이동" }),
+  ).toBeVisible();
+});
+
+test("operator empty later page returns to first page with filters preserved", async ({
+  page,
+}) => {
+  await setup(page);
+  await page.route("**/api/backend/projects/*/applications?*", (r) => {
+    const offset = Number(
+      new URL(r.request().url()).searchParams.get("offset") ?? 0,
+    );
+    return r.fulfill({
+      json: {
+        data: {
+          items: [],
+          total: 0,
+          limit: 20,
+          offset,
+          project: seed.project,
+          role: "OPERATOR",
+        },
+      },
+    });
+  });
+  await page.goto(`${base}?status=REVIEWING&offset=20`);
+  await expect(page.getByText("이 페이지에 신청이 없어요.")).toBeVisible();
+  await page.getByRole("link", { name: "첫 페이지로" }).click();
+  await expect(page).toHaveURL(/status=REVIEWING.*offset=0/);
+  await expect(page.getByText("조건에 맞는 신청이 없어요.")).toBeVisible();
+});
+
 test("filters, pagination and detail backlink preserve list state", async ({
   page,
 }) => {

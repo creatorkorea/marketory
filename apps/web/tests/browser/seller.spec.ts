@@ -195,6 +195,37 @@ test("public market and authenticated profile keep narrow keyboard layout", asyn
     fullPage: true,
   });
 });
+test("seller UX keeps uploads before next and cancellation deliberately collapsed", async ({
+  page,
+}) => {
+  await fixture(page);
+  await page.route(`**/api/backend/applications/${aid}`, (r) =>
+    r.fulfill({ json: { data: seed } }),
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`/p/${pid}/apply`);
+  await page.getByRole("button", { name: "2. 상품과 사진" }).click();
+  const upload = await page.getByLabel("상품 사진 선택").boundingBox();
+  const next = await page
+    .getByRole("button", { name: "다음 단계" })
+    .boundingBox();
+  expect(upload!.y + upload!.height).toBeLessThan(next!.y);
+  await expect(page.getByLabel("취소 사유")).toBeHidden();
+  await page.locator(".seller-cancel summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByLabel("취소 사유")).toBeVisible();
+  await page.getByLabel("취소 사유").fill("테스트 취소 확인");
+  await page.getByRole("button", { name: "신청 취소 내용 확인" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.locator(".seller-cancel summary").focus();
+  await page.keyboard.press("Enter");
+  await page.screenshot({
+    path: "../../output/ux-audit-20261019/01-seller-after.png",
+    fullPage: true,
+  });
+});
+
 test("wizard saves, reviews server consent, and prevents duplicate submit", async ({
   page,
 }) => {
@@ -249,6 +280,10 @@ test("wizard saves, reviews server consent, and prevents duplicate submit", asyn
     page.getByText("테스트용 정책 본문", { exact: true }),
   ).toBeVisible();
   await page.getByLabel("위 동의 내용을 확인하고 동의합니다.").check();
+  await page.screenshot({
+    path: "../../output/ux-audit-20261019/05-seller-confirmation.png",
+    fullPage: true,
+  });
   await page.getByRole("button", { name: "신청 제출 내용 확인" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(
@@ -258,6 +293,10 @@ test("wizard saves, reviews server consent, and prevents duplicate submit", asyn
     .getByRole("button", { name: "신청 제출하기", exact: true })
     .click();
   await expect(page.getByText("접수 완료", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: "../../output/ux-audit-20261019/06-seller-submitted.png",
+    fullPage: true,
+  });
   expect(submitted).toBe(1);
   expect(
     await page.evaluate(

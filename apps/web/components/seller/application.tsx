@@ -536,32 +536,6 @@ function ApplicationEditor({
                     : "신청 제출 내용 확인"}
                 </Button>
               </section>
-              <div className="seller-wizard-actions">
-                <span role="status" className="muted">
-                  {dirty
-                    ? saveState || "저장 대기"
-                    : saveState || "서버에 저장된 초안"}
-                </span>
-                <div className="actions">
-                  <Button type="submit" variant="secondary" disabled={!dirty}>
-                    임시저장
-                  </Button>
-                  {step > 1 && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => setStep((v) => v - 1)}
-                    >
-                      이전 단계
-                    </Button>
-                  )}
-                  {step < 4 && (
-                    <Button type="button" onClick={() => setStep((v) => v + 1)}>
-                      다음 단계
-                    </Button>
-                  )}
-                </div>
-              </div>
             </fieldset>
           </form>
           <div hidden={step !== 2}>
@@ -577,6 +551,39 @@ function ApplicationEditor({
                 <Notice title={error.message} tone="warning" />
               )}
           </div>
+          <fieldset className="seller-wizard-controls" disabled={blocked}>
+            <div className="seller-wizard-actions">
+              <span role="status" className="muted">
+                {dirty
+                  ? saveState || "저장 대기"
+                  : saveState || "서버에 저장된 초안"}
+              </span>
+              <div className="actions">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!dirty}
+                  onClick={() => save()}
+                >
+                  임시저장
+                </Button>
+                {step > 1 && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setStep((v) => v - 1)}
+                  >
+                    이전 단계
+                  </Button>
+                )}
+                {step < 4 && (
+                  <Button type="button" onClick={() => setStep((v) => v + 1)}>
+                    다음 단계
+                  </Button>
+                )}
+              </div>
+            </div>
+          </fieldset>
         </>
       ) : (
         <section className="market-section">
@@ -651,8 +658,12 @@ function ApplicationEditor({
         </Notice>
       )}
       {app.allowed_actions.includes("cancel") && (
-        <section className="market-section">
-          <h3>신청 취소</h3>
+        <details className="market-section seller-cancel">
+          <summary>신청 취소</summary>
+          <p className="hint">
+            신청을 철회해야 할 때만 열어 주세요. 취소 후에는 같은 마켓에 다시
+            신청할 수 없습니다.
+          </p>
           <Field
             id="cancel-reason"
             label="취소 사유"
@@ -667,7 +678,7 @@ function ApplicationEditor({
           >
             신청 취소 내용 확인
           </Button>
-        </section>
+        </details>
       )}
       {confirm && (
         <ConfirmDialog

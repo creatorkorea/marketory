@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useId, useRef, type ReactNode } from "react";
 import { Button } from "./button";
 export function ConfirmDialog({
   title,
@@ -17,13 +17,15 @@ export function ConfirmDialog({
   const ref = useRef<HTMLDialogElement>(null);
   const cancel = useRef<HTMLButtonElement>(null);
   const id = useId();
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const dialog = ref.current;
     const previous = document.activeElement as HTMLElement | null;
-    ref.current?.showModal();
+    dialog?.showModal();
     cancel.current?.focus();
     return () => {
-      ref.current?.close();
-      previous?.focus();
+      // Close and restore before React detaches the modal and clears refs.
+      dialog?.close();
+      if (previous?.isConnected) previous.focus();
     };
   }, []);
   return (

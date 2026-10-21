@@ -43,6 +43,9 @@ function List({
 }) {
   const router = useRouter();
   const params = new URLSearchParams(query);
+  const activeStatus = params.get("status") ?? "";
+  const activeCategory = params.get("category") ?? "";
+  const filtered = Boolean(activeStatus || activeCategory);
   const [data, setData] = useState<ListData | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState("");
@@ -91,19 +94,24 @@ function List({
   };
   return (
     <section className="review-list">
-      <ButtonLink href="/markets" variant="secondary">
-        마켓 목록
-      </ButtonLink>
-      {data && (
-        <ButtonLink href={`/markets/${id}/booths`} variant="secondary">
-          부스 배치
+      <nav className="actions" aria-label="마켓 업무 이동">
+        <ButtonLink href="/markets" variant="secondary">
+          마켓 목록
         </ButtonLink>
-      )}
-      {data && (session.admin || data.role === "OPERATOR") && (
-        <ButtonLink href={`/markets/${id}/communications`} variant="secondary">
-          셀러 안내
-        </ButtonLink>
-      )}
+        {data && (
+          <ButtonLink href={`/markets/${id}/booths`} variant="secondary">
+            부스 배치
+          </ButtonLink>
+        )}
+        {data && (session.admin || data.role === "OPERATOR") && (
+          <ButtonLink
+            href={`/markets/${id}/communications`}
+            variant="secondary"
+          >
+            셀러 안내
+          </ButtonLink>
+        )}
+      </nav>
       {data && <h2>{data.project.name}</h2>}
       {!summary && (
         <form
@@ -164,6 +172,19 @@ function List({
           </ButtonLink>
         </form>
       )}
+      {data && filtered && (
+        <section className="review-active-filters" aria-label="적용된 필터">
+          <span className="muted">적용된 필터</span>
+          {activeStatus && (
+            <span className="badge">
+              상태 · {applicationLabels[activeStatus] ?? activeStatus}
+            </span>
+          )}
+          {activeCategory && (
+            <span className="badge">카테고리 · {activeCategory}</span>
+          )}
+        </section>
+      )}
       {error ? (
         <Notice tone="warning" title={error}>
           <Button onClick={() => setRetry((v) => v + 1)}>다시 불러오기</Button>
@@ -196,8 +217,34 @@ function List({
               : "0건 표시"}
           </p>
           {!data.items.length ? (
-            <Notice title="조건에 맞는 신청이 없어요.">
-              필터를 초기화하거나 이전 페이지를 확인해 주세요.
+            <Notice
+              title={
+                data.offset > 0
+                  ? "이 페이지에 신청이 없어요."
+                  : filtered
+                    ? "조건에 맞는 신청이 없어요."
+                    : "아직 접수된 신청이 없어요."
+              }
+            >
+              <p>
+                {data.offset > 0
+                  ? "첫 페이지에서 신청 목록을 다시 확인해 주세요."
+                  : filtered
+                    ? "다른 상태나 카테고리를 선택하거나 전체 신청을 확인해 주세요."
+                    : "셀러가 신청을 제출하면 이곳에서 자료를 검토할 수 있어요."}
+              </p>
+              {(filtered || data.offset > 0) && (
+                <div className="actions">
+                  <ButtonLink
+                    href={
+                      data.offset > 0 ? href(0) : `/markets/${id}/applications`
+                    }
+                    variant="secondary"
+                  >
+                    {data.offset > 0 ? "첫 페이지로" : "전체 신청 보기"}
+                  </ButtonLink>
+                </div>
+              )}
             </Notice>
           ) : (
             <table className="review-table">
