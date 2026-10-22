@@ -98,7 +98,7 @@ test("seller published notices show safe text, retry and pagination on mobile", 
     return route.fulfill({json:{data:{items:[{communication_id: String(offset), subject: offset ? "이전 안내" : "행사 준비 안내", body: "<script>실행하지 않음</script>\n준비물: 가격표\n" + "긴안내".repeat(80), content_version:1, published_at:"2026-10-21T13:00:00Z"}],limit:5,offset,has_more:offset===0}}});
   });
   await page.goto(`/me/applications/${aid}`);
-  const region = page.getByRole("region",{name:"운영 안내",exact:true});
+  const region = page.getByRole("region",{name:"내 신청 개별 안내",exact:true});
   await expect(region.getByText("운영 안내를 불러오지 못했어요.")).toBeVisible();
   fail = false;
   await region.getByRole("button",{name:"다시 불러오기"}).click();
@@ -674,6 +674,7 @@ test("approved seller explicitly confirms participation and expired deadline sta
     allowed_actions: ["confirm", "cancel"],
   };
   let calls = 0;
+  await page.route(`**/api/backend/applications/${aid}/market-notices**`, r => r.fulfill({json:{data:{items:app.status === "CONFIRMED" ? [{announcement_id:pid,subject:"확정자 전용 공지",body:"입장",published_at:"2026-10-22T00:00:00Z"}] : [],has_more:false}}}));
   await page.route(`**/api/backend/applications/${aid}`, (r) =>
     r.fulfill({ json: { data: app } }),
   );
@@ -693,6 +694,7 @@ test("approved seller explicitly confirms participation and expired deadline sta
   await expect(page.getByRole("dialog")).toContainText("참가를 확정할까요?");
   await page.getByRole("button", { name: "참가확정하기", exact: true }).click();
   await expect(page.getByText("참가확정이 완료됐어요.")).toBeVisible();
+  await expect(page.getByRole("heading",{name:"확정자 전용 공지"})).toBeVisible();
   expect(calls).toBe(1);
   app = {
     ...app,
@@ -706,4 +708,24 @@ test("approved seller explicitly confirms participation and expired deadline sta
     page.getByRole("button", { name: "참가확정 내용 확인" }),
   ).toHaveCount(0);
   expect(calls).toBe(1);
+});
+
+for (const width of [320, 390]) test(`공통 안내와 개별 안내 독립 조회 ${width}`, async ({page}) => {
+  await page.setViewportSize({width,height:844}); await fixture(page);
+  await page.route(`**/api/backend/applications/${aid}`,r=>r.fulfill({json:{data:{...seed,status:"CONFIRMED",allowed_actions:[]}}}));
+  await page.route(`**/api/backend/applications/${aid}/notices**`,r=>r.fulfill({json:{data:{items:[{communication_id:aid,subject:"개별 준비",body:"가격표 준비",published_at:"2026-10-22T00:00:00Z"}],has_more:false}}}));
+  let status=503;
+  await page.route(`**/api/backend/applications/${aid}/market-notices**`,r=>r.fulfill({status,json:status===200?{data:{items:[{announcement_id:pid,subject:"공통 준비",body:"<script>실행하지 않음</script>\n"+"긴문자".repeat(200),published_at:"2026-10-22T00:00:00Z"}],has_more:false}}:{code:"UNAVAILABLE"}}));
+  await page.goto(`/me/applications/${aid}`);
+  const common=page.getByRole('region',{name:'마켓 공통 안내',exact:true});
+  await expect(page.getByRole('heading',{name:'개별 준비'})).toBeVisible();
+  await expect(common.getByRole('button',{name:'다시 불러오기'})).toBeVisible();
+  status=200; await common.getByRole('button',{name:'다시 불러오기'}).click();
+  await expect(common.getByRole('heading',{name:'공통 준비'})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:`../../output/announcements-seller-${width}.png`,fullPage:true});
+  status=403; await common.getByRole('button',{name:'공통 안내 새로고침'}).click();
+  await expect(common.getByText('이 신청의 안내를 조회할 수 없습니다.')).toBeVisible();
+  await expect(common.getByRole('heading',{name:'공통 준비'})).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'개별 준비'})).toBeVisible();
 });

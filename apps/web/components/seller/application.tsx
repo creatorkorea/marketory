@@ -353,6 +353,7 @@ function ApplicationEditor({
           운영자가 배치를 확정하면 이곳에서 확인할 수 있습니다.
         </Notice>
       )}
+      {app.status !== "DRAFT" && <SellerNotices common key={`common:${app.application_id}:${app.status}`} session={session} applicationId={app.application_id} />}
       {app.status !== "DRAFT" && <SellerNotices key={app.application_id} session={session} applicationId={app.application_id} />}
       {app.status === "NEED_INFO" && (
         <Notice title="요청한 항목만 보완할 수 있어요." tone="warning">
