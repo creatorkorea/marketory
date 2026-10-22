@@ -8,6 +8,25 @@ const req = (path: string, init: RequestInit = {}) =>
     headers: { Authorization: "Bearer test-token", ...init.headers },
   });
 describe("backend relay trust boundary", () => {
+  it("relays 공통 안내 and all recovery operations with private pagination", async () => {
+    const id = "12345678-1234-4123-8123-123456789abc";
+    const fetcher = vi.fn().mockImplementation(async (url) => Response.json({url:String(url)}));
+    for (const path of [`projects/${id}/announcements`, `applications/${id}/market-notices`]) {
+      const reply = await relay(req(path+'?limit=5&offset=5&actor=other'), path.split('/'), base, fetcher);
+      expect(reply.status).toBe(200);
+      expect((await reply.json()).url).toBe(`${base}/api/${path}?limit=5&offset=5`);
+      expect(reply.headers.get('cache-control')).toContain('no-store');
+    }
+    for (const op of ['create','revise','approve','publish','unpublish']) {
+      const path = op === 'create' ? `projects/${id}/announcements` : `announcements/${id}/${op}`;
+      expect((await relay(req(path,{method:'POST',headers:{'Idempotency-Key':id},body:'{}'}),path.split('/'),base,fetcher)).status).toBe(200);
+      const lookup = `me/requests/announcements.${op}/${id}`;
+      expect((await relay(req(lookup),lookup.split('/'),base,fetcher)).status).toBe(200);
+    }
+    const path = `applications/${id}/market-notices`;
+    expect((await relay(new Request('https://app.example.test/'+path),path.split('/'),base,fetcher)).status).toBe(401);
+    expect((await relay(req(`announcements/${id}/send`,{method:'POST'}),['announcements',id,'send'],base,fetcher)).status).toBe(404);
+  });
   it("relays owner notices and explicit publication mutations without widening query access", async () => {
     const id = "12345678-1234-4123-8123-123456789abc";
     const fetcher = vi.fn().mockImplementation(async (url) => Response.json({ url: String(url) }));

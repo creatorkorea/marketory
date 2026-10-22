@@ -279,6 +279,7 @@ function Board({
     `/markets/${id}/communications?limit=${limit}&offset=${offset}`;
   return (
     <section className="communications-board">
+      <ButtonLink href={`/markets/${id}/announcements`} variant="secondary">마켓 공통 안내</ButtonLink>
       <UnsavedGuard active={dirty || mutation.locked} />
       <nav className="actions" aria-label="마켓 운영">
         <ButtonLink variant="secondary" href={`/markets/${id}/applications`}>

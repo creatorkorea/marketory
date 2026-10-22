@@ -21,6 +21,7 @@ export async function relay(
   const project = segments[0] === "projects" && uuid.test(segments[1] ?? "");
   const application =
     segments[0] === "applications" && uuid.test(segments[1] ?? "");
+  const announcement = segments[0] === "announcements" && uuid.test(segments[1] ?? "");
   const communication =
     segments[0] === "communications" && uuid.test(segments[1] ?? "");
   const attachment =
@@ -35,6 +36,8 @@ export async function relay(
   const allowed =
     (request.method === "POST" && path === "auth/bootstrap") ||
     publicRead ||
+    (announcement && segments.length === 2 && request.method === "GET") ||
+    (announcement && segments.length === 3 && request.method === "POST" && ["revise", "approve", "publish", "unpublish"].includes(segments[2])) ||
     (path === "communications/generate" && request.method === "POST") ||
     (communication && segments.length === 2 && request.method === "GET") ||
     (communication &&
@@ -47,7 +50,7 @@ export async function relay(
       ["GET", "POST", "PATCH"].includes(request.method)) ||
     (path === "me/applications" && request.method === "GET") ||
     (path === "applications" && request.method === "POST") ||
-    (application && segments.length === 3 && segments[2] === "notices" && request.method === "GET") ||
+    (application && segments.length === 3 && ["notices", "market-notices"].includes(segments[2]) && request.method === "GET") ||
     (application &&
       segments.length === 2 &&
       ["GET", "PATCH"].includes(request.method)) ||
@@ -92,7 +95,7 @@ export async function relay(
       segments.length === 3 &&
       request.method === "GET" &&
       [
-        "communications",
+        "communications", "announcements",
         "communication-targets",
         "settings",
         "members",
@@ -104,6 +107,7 @@ export async function relay(
       segments.length === 3 &&
       request.method === "POST" &&
       [
+        "announcements",
         "status",
         "members",
         "booths",
@@ -122,6 +126,7 @@ export async function relay(
           segments[0] === "me" &&
           segments[1] === "requests" &&
           [
+            "announcements.create", "announcements.revise", "announcements.approve", "announcements.publish", "announcements.unpublish",
             "communications.generate",
             "communications.approve",
             "communications.send",
@@ -184,7 +189,7 @@ export async function relay(
   if (["POST", "PATCH"].includes(request.method)) {
     const key = request.headers.get("idempotency-key");
     if (!key || !uuid.test(key)) return error(422, "INVALID_REQUEST_KEY");
-    const maxBytes = path === "auth/bootstrap" ? 1024 : 65536;
+    const maxBytes = path === "auth/bootstrap" ? 1024 : (announcement || (project && segments[2] === "announcements")) ? 300000 : 65536;
     if (Number(request.headers.get("content-length")) > maxBytes)
       return error(413, "BODY_TOO_LARGE");
     body = await request.text();
@@ -209,10 +214,10 @@ export async function relay(
     const target = new URL(`/api/${path}`, base);
     if (
       (["projects", "me/applications", "public/projects"].includes(path) ||
-        (application && segments.length === 3 && segments[2] === "notices") ||
+        (application && segments.length === 3 && ["notices", "market-notices"].includes(segments[2])) ||
         (project &&
           segments.length === 3 &&
-          ["applications", "communications"].includes(segments[2]))) &&
+          ["applications", "communications", "announcements"].includes(segments[2]))) &&
       request.method === "GET"
     ) {
       const query = new URL(request.url).searchParams;
