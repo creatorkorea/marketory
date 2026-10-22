@@ -62,6 +62,21 @@ async def require_seller(conn, actor, seller_id):
 async def authorize_result(conn, actor, row):
     await active_user(conn, actor)
     if row["operation"] in (
+        "announcements.create",
+        "announcements.revise",
+        "announcements.approve",
+        "announcements.publish",
+        "announcements.unpublish",
+    ):
+        if row["resource_type"] == "announcement":
+            from marketory.announcement_domain import require_announcement
+
+            await require_announcement(conn, actor, row["resource_id"])
+            return
+        if row["resource_type"] == "project" and row["operation"] == "announcements.create":
+            await require_project(conn, actor, row["resource_id"], "operate")
+            return
+    if row["operation"] in (
         "communications.generate",
         "communications.approve",
         "communications.send",

@@ -7,6 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from psycopg.rows import dict_row
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from marketory.announcements import announcement_router
 from marketory.applications import application_router
 from marketory.attachments import attachment_router
 from marketory.auth import Identity
@@ -245,6 +246,11 @@ def build_router(settings, verify, storage=None):
             "communications.resolve",
             "communications.publish",
             "communications.unpublish",
+            "announcements.create",
+            "announcements.revise",
+            "announcements.approve",
+            "announcements.publish",
+            "announcements.unpublish",
         ):
             raise DomainError(422, "UNKNOWN_OPERATION", "지원하지 않는 요청 종류입니다.")
         async with transaction(settings) as conn:
@@ -261,4 +267,5 @@ def build_router(settings, verify, storage=None):
     router.include_router(review_router(settings, identity))
     router.include_router(booth_router(settings, identity))
     router.include_router(communication_router(settings, identity))
+    router.include_router(announcement_router(settings, identity))
     return router
