@@ -2,7 +2,7 @@
 
 플리마켓 셀러 모집·신청·심사·참가확정·부스·안내를 관리하는 반응형 웹 서비스입니다.
 
-**현재 상태: 인증·마켓 설정·셀러 신청/파일·수동 심사·참가확정·부스 배치·운영 안내 메일 구현.** 실제 Supabase 연결과 로그인 설정을 사용합니다. 각 기능의 로컬 검증·실제 서비스 연결·미완료 범위는 아래 구현 기록에서 구분합니다. 외부 배포와 실제 고객의 전체 업무 흐름 검증은 남아 있습니다. Git 원격은 `creatorkorea/marketory`입니다. [로컬 실행](docs/LOCAL-DEVELOPMENT.md) · [인증](docs/AUTH-SETUP.md) · [마켓 관리](docs/MARKET-MANAGEMENT.md) · [셀러 신청](docs/SELLER-APPLICATIONS.md) · [심사](docs/OPERATOR-REVIEW.md) · [부스 배치](docs/BOOTH-MANAGEMENT.md) · [운영 안내 메일](docs/COMMUNICATIONS.md). `design-system/preview.html`은 정적 디자인 견본이고 `/ui`는 제품 컴포넌트 견본입니다.
+**현재 상태(2026-10-23): 웹·API 공개 배포 및 합성 테스트 마켓의 신청·심사·참가확정·부스·개별/공통 안내·취소 흐름 검증 완료.** 실제 Supabase 연결과 로그인 설정을 사용합니다. 각 기능의 로컬 검증·실제 서비스 연결·미완료 범위는 아래 구현 기록에서 구분합니다. 실제 행사 운영 개시는 준비 단계이며, 실제 고객 운영·실기기·전체 백업/복구·상시 메일 발송은 별도입니다. 최신 범위는 [MVP 통합 검증 결과](docs/qa/MVP-VERIFICATION.md)를 확인합니다. Git 원격은 `creatorkorea/marketory`입니다. [로컬 실행](docs/LOCAL-DEVELOPMENT.md) · [인증](docs/AUTH-SETUP.md) · [마켓 관리](docs/MARKET-MANAGEMENT.md) · [셀러 신청](docs/SELLER-APPLICATIONS.md) · [심사](docs/OPERATOR-REVIEW.md) · [부스 배치](docs/BOOTH-MANAGEMENT.md) · [운영 안내 메일](docs/COMMUNICATIONS.md). `design-system/preview.html`은 정적 디자인 견본이고 `/ui`는 제품 컴포넌트 견본입니다.
 
 ## 개발을 시작하려면
 
@@ -14,7 +14,7 @@
 
 ## 현재 기준
 
-**Vercel(웹) + Render(Python API·worker) + Supabase(DB·인증·파일)**로 확정했습니다(2026-10-08 사용자 결정). [배포 구성과 연결 준비](docs/DEPLOYMENT.md)를 참고합니다. 프로젝트 연결·실제 배포는 아직 수행하지 않았습니다.
+**Vercel(웹) + Render(Python API·worker) + Supabase(DB·인증·파일)**로 확정했습니다(2026-10-08 사용자 결정). [배포 구성과 연결 준비](docs/DEPLOYMENT.md)를 참고합니다. 웹은 Vercel, API는 Render Free에 배포했습니다. 상시 worker는 무료 조건으로 배포 보류 상태입니다.
 
 | 영역 | 기준 |
 |---|---|
